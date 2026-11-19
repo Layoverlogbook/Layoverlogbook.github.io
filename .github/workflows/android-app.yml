@@ -1,0 +1,67 @@
+name: Build Android app
+
+on:
+  push:
+    branches: [main]
+    paths: ["android/**", ".github/workflows/android-app.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      HAS_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+
+      - name: Use the private signing key if one is set (needed for Google Play)
+        if: ${{ env.HAS_KEY == 'true' }}
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+          echo "ANDROID_KEYSTORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "ANDROID_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}" >> "$GITHUB_ENV"
+          echo "ANDROID_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}" >> "$GITHUB_ENV"
+
+      - name: Build APK and Play Store bundle
+        run: gradle --no-daemon assembleRelease bundleRelease
+
+      - name: Name the files
+        run: |
+          mkdir -p out
+          cp app/build/outputs/apk/release/app-release.apk out/LayoverLogbook.apk
+          cp app/build/outputs/bundle/release/app-release.aab out/LayoverLogbook.aab
+
+      - name: Publish download
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-latest
+          name: Layover Logbook for Android
+          make_latest: false
+          body: |
+            Layover Logbook for Android (build ${{ github.run_number }}).
+
+            - **LayoverLogbook.apk**: install directly on an Android phone.
+            - **LayoverLogbook.aab**: the bundle for publishing on Google Play.
+
+            To install the APK: open it on the phone, and if Android asks, allow your browser to install apps ("Install unknown apps"), then tap Install.
+          files: |
+            android/out/LayoverLogbook.apk
+            android/out/LayoverLogbook.aab
