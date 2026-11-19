@@ -229,6 +229,7 @@ h2{font:800 clamp(2.4rem,5vw,4rem)/.95 var(--display);max-width:16ch;text-wrap:b
 /* install */
 .install{padding:1rem 0 6rem}
 .win-dl{gap:.6rem}
+.dl-row{display:flex;flex-wrap:wrap;gap:.7rem}
 .install .win-note{margin-top:1.2rem;color:var(--haze);font-size:.92rem}
 .install ol{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;counter-reset:i}
 .install li{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:1.8rem 1.6rem;position:relative}
@@ -394,7 +395,7 @@ footer p{max-width:70ch}
         <a class="btn btn-ink" href="app.html">Start free</a>
         <a class="btn btn-ghost" href="#features">See how it works</a>
       </div>
-      <p class="fine">Works on iPhone and Android. Nothing to download from a store. On a computer? <a href="https://github.com/Layoverlogbook/layoverlogbook.github.io/releases/latest/download/LayoverLogbook-Setup.exe">Download for Windows</a></p>
+      <p class="fine">Works on iPhone and Android. Nothing to download from a store. Prefer an app? <a href="https://github.com/Layoverlogbook/layoverlogbook.github.io/releases/download/android-latest/LayoverLogbook.apk">Android</a> or <a href="https://github.com/Layoverlogbook/layoverlogbook.github.io/releases/latest/download/LayoverLogbook-Setup.exe">Windows</a>.</p>
     </div>
   </div>
   <div class="drag-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 12h8M8 12l3-3M8 12l3 3M16 12l-3-3M16 12l-3 3"/></svg>Drag the globe</div>
@@ -593,13 +594,13 @@ footer p{max-width:70ch}
 
 <section class="install" id="install">
   <div class="wrap">
-    <div class="sec-head"><h2>On your home screen in a minute</h2><a class="btn btn-ink win-dl" href="https://github.com/Layoverlogbook/layoverlogbook.github.io/releases/latest/download/LayoverLogbook-Setup.exe"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M3 5.5l7.5-1v7H3zM11.5 4.4L21 3v8.5h-9.5zM3 12.5h7.5v7L3 18.5zM11.5 12.5H21V21l-9.5-1.4z"/></svg>Download for Windows</a></div>
+    <div class="sec-head"><h2>On your home screen in a minute</h2><div class="dl-row"><a class="btn btn-ink win-dl" href="https://github.com/Layoverlogbook/layoverlogbook.github.io/releases/latest/download/LayoverLogbook-Setup.exe"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M3 5.5l7.5-1v7H3zM11.5 4.4L21 3v8.5h-9.5zM3 12.5h7.5v7L3 18.5zM11.5 12.5H21V21l-9.5-1.4z"/></svg>Download for Windows</a><a class="btn btn-ghost win-dl" href="https://github.com/Layoverlogbook/layoverlogbook.github.io/releases/download/android-latest/LayoverLogbook.apk"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M17.6 9.5l1.7-3a.4.4 0 0 0-.7-.4l-1.7 3a10.4 10.4 0 0 0-9.8 0l-1.7-3a.4.4 0 0 0-.7.4l1.7 3A9.6 9.6 0 0 0 2 17h20a9.6 9.6 0 0 0-4.4-7.5zM7 14.2a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm10 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>Download for Android</a></div></div>
     <ol>
       <li class="tilt"><h3>Open the app</h3><p>Go to <a href="app.html">Layover Logbook</a> in Safari on iPhone or Chrome on Android.</p></li>
       <li class="tilt"><h3>Add to home screen</h3><p>iPhone: tap Share, then Add to Home Screen. Android: tap the menu, then Install app.</p></li>
       <li class="tilt"><h3>Set your base</h3><p>Choose your home city and currency. Your times, fatigue and money all follow it.</p></li>
     </ol>
-    <p class="win-note">On Windows, the first time you open the app Windows may say "Windows protected your PC". Click More info, then Run anyway.</p>
+    <p class="win-note">On Android, open the downloaded file and allow your browser to install apps if asked. On Windows, the first time you open the app Windows may say "Windows protected your PC". Click More info, then Run anyway.</p>
   </div>
 </section>
 
@@ -615,7 +616,7 @@ footer p{max-width:70ch}
 
 <footer>
   <div class="wrap">
-    <nav aria-label="Footer"><a href="app.html">Open the app</a><a href="https://github.com/Layoverlogbook/layoverlogbook.github.io/releases/latest/download/LayoverLogbook-Setup.exe">Windows app</a><a href="pricing.html">Pricing</a><a href="terms.html">Terms and refunds</a><a href="conditions-generales.html" lang="fr">Conditions (FR)</a><a href="privacy-policy.html">Privacy policy</a><a href="politique-de-confidentialite.html" lang="fr">Confidentialité (FR)</a><a href="mailto:karawen.ben.cheikh@gmail.com">Contact</a></nav>
+    <nav aria-label="Footer"><a href="app.html">Open the app</a><a href="https://github.com/Layoverlogbook/layoverlogbook.github.io/releases/latest/download/LayoverLogbook-Setup.exe">Windows app</a><a href="https://github.com/Layoverlogbook/layoverlogbook.github.io/releases/download/android-latest/LayoverLogbook.apk">Android app</a><a href="pricing.html">Pricing</a><a href="terms.html">Terms and refunds</a><a href="conditions-generales.html" lang="fr">Conditions (FR)</a><a href="privacy-policy.html">Privacy policy</a><a href="politique-de-confidentialite.html" lang="fr">Confidentialité (FR)</a><a href="mailto:karawen.ben.cheikh@gmail.com">Contact</a></nav>
     <p>Layover Logbook is an independent app made by airline crew. It is not affiliated with any airline. Fatigue scores are a planning guide, not medical advice, and don't replace your company's rules.</p>
     <p>Our order process is conducted by our online reseller Paddle.com. Paddle.com is the Merchant of Record for all our orders.</p>
   </div>
