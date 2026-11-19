@@ -1,4 +1,4 @@
-/* Cookieless audience measurement for layoverlogbook.com.
+/* Cookieless audience measurement for layoverlogbook.github.io.
    Sends one anonymous record per page view to the site's own Supabase database:
    the page path, the referring website (domain only), the browser language (2 letters),
    the type of device, and whether this view started a visit.
