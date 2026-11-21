@@ -239,7 +239,7 @@ function icsFor(u){
   return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Layover Logbook//Off together//EN","BEGIN:VEVENT",
     `UID:together-${u.from}-${Date.now()}@layoverlogbook`,`DTSTAMP:${new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+/,"")}`,
     `DTSTART;VALUE=DATE:${z(u.from)}`,`DTEND;VALUE=DATE:${z(addD(u.to,1))}`,
-    `SUMMARY:Off together with ${who.replace(/[,;\\]/g," ")}`,"END:VEVENT","END:VCALENDAR"].join("\r\n");
+    `SUMMARY:${u.type==="full"?"Off together":"Free part of the day"} with ${who.replace(/[,;\\]/g," ")}`,"END:VEVENT","END:VCALENDAR"].join("\r\n");
 }
 function download(name,text){
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type:"text/calendar"})); a.download=name;
@@ -320,10 +320,12 @@ el("tgPicks").addEventListener("click",e=>{
 });
 el("tgList").addEventListener("click",async e=>{
   const up=el("tgList")._up||[], c=e.target.closest("[data-ics]"), v=e.target.closest("[data-inv]");
+  if(c&&window.LayoverAndroid&&LayoverAndroid.addEvent){ const u=up[+c.dataset.ics];
+    LayoverAndroid.addEvent((u.type==="full"?"Off together with ":"Free part of the day with ")+people().slice(1).map(p=>p.name).join(", "),+dOf(u.from),+dOf(addD(u.to,1)),true); return; }
   if(c){ const u=up[+c.dataset.ics]; download(`off-together-${u.from}.ics`,icsFor(u)); say("Open the file to add it to your calendar."); }
   if(v){ const u=up[+v.dataset.inv], len=diffD(u.from,u.to)+1;
     const when=len>1?`${fmt(u.from)} to ${fmt(u.to)}`:fmt(u.from,{weekday:"long"});
-    await shareText(`We're all off ${when}! ✈️ Plans? Brunch, beach or a quick trip?`,"Off together"); }
+    await shareText(u.type==="full"?`We're all off ${when}! ✈️ Plans? Brunch, beach or a quick trip?`:`We're all free for part of ${when}. ✈️ Dinner or a coffee?`,"Off together"); }
 });
 el("tgInAdd").addEventListener("click",()=>{ const b=pending; closeIn(); if(b){ addBuddy(b); if(typeof showTab==="function") showTab("rest","together"); } });
 el("tgInNo").addEventListener("click",closeIn); el("tgInBg").addEventListener("click",closeIn);

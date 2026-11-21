@@ -14,6 +14,14 @@
 <link rel="manifest" href="manifest.webmanifest">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <script src="config.js"></script>
+<script>/* Android app: use the phone's share sheet, calendar and Downloads (see MainActivity.Bridge) */
+(function(){var A=window.LayoverAndroid;if(!A)return;
+  if(!navigator.share)navigator.share=function(d){d=d||{};A.share(d.title||"",[d.text,d.url].filter(Boolean).join(" "));return Promise.resolve();};
+  var click=HTMLAnchorElement.prototype.click;
+  HTMLAnchorElement.prototype.click=function(){var h=this.href||"",n=this.download;
+    if(n&&h.indexOf("blob:")===0){fetch(h).then(function(r){return r.blob()}).then(function(b){return b.text().then(function(t){A.saveFile(n,b.type||"",t)})});return;}
+    return click.apply(this,arguments);};
+})();</script>
 <script>
 /* Phone website: talks straight to free map, weather and currency services (no keys needed). */
 window.LAYOVER_WEB=true;
