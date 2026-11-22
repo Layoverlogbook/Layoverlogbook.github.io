@@ -1,6 +1,6 @@
 /* Keeps the app working offline. Bump the version when you upload a new build. */
-const CACHE = "layover-v5.3";
-const SHELL = ["./app.html", "./config.js", "./globe3d.js", "./postcards.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png",
+const CACHE = "layover-v6.1";
+const SHELL = ["./app.html", "./config.js", "./globe3d.js", "./postcards.js", "./together.js", "./fx3d.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png",
   "./privacy-policy.html", "./politique-de-confidentialite.html", "./terms.html", "./conditions-generales.html"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener("activate", e => {

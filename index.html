@@ -347,6 +347,38 @@ footer p{max-width:70ch}
 #globe[style*="none"] ~ .pass3d{margin-top:1.5rem}
 @media (max-width:420px){.p3-route b{font-size:2.4rem}.p3-grid b{font-size:1rem}}
 @media (prefers-reduced-motion:reduce){.pass3d .float{animation:none}.flap.go{animation:none}}
+
+/* Off together mock */
+.new-badge{display:inline-block;background:var(--airway);color:#fff;font:800 .85rem/1 var(--display);letter-spacing:.1em;text-transform:uppercase;padding:.35rem .6rem;border-radius:6px;margin-bottom:.9rem;box-shadow:0 8px 18px -8px var(--airway)}
+.m-flap{margin:0 .7rem;border-radius:18px;padding:.8rem;color:#fff;display:grid;gap:.45rem;background:radial-gradient(70% 60% at 90% 0%,rgba(226,88,159,.5),transparent 70%),linear-gradient(160deg,#1C2F50,#081222)}
+.m-flap small{font:800 .66rem/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--beacon)}
+.m-flap span{font-size:.7rem;color:#C9D6E4}
+.flaps{display:flex;gap:2px;perspective:200px}
+.flaps i{width:19px;height:28px;border-radius:4px;background:#0A1426;display:grid;place-items:center;font:800 1.15rem/1 var(--display);font-style:normal;position:relative;box-shadow:0 4px 8px -4px #000;transform-origin:50% 50%}
+.flaps i::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.7)}
+.flaps i.sp{width:6px;background:none;box-shadow:none}.flaps i.sp::after{content:none}
+@media (prefers-reduced-motion:no-preference){.flaps i:not(.sp){animation:mflap 4.5s cubic-bezier(.3,.7,.3,1) infinite;animation-delay:calc(var(--d)*70ms)}}
+@keyframes mflap{0%,8%{transform:rotateX(0)}12%{transform:rotateX(-90deg)}16%,100%{transform:rotateX(0)}}
+.m-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:.45rem;perspective:500px}
+.m-cal .dow{font-style:normal;text-align:center;font-size:.55rem;color:var(--haze);font-weight:700}
+.m-cal span{position:relative;height:30px;border-radius:6px;background:#fff;border:1px solid #D3DEE5;display:flex;flex-direction:column;justify-content:space-between;padding:2px 3px}
+.m-cal span b{font-size:.58rem;line-height:1}
+.m-cal s{display:flex;gap:1px;text-decoration:none}
+.m-cal u{flex:1;height:3px;border-radius:2px;background:#DCE6EB}
+.m-cal u.f{background:var(--pc)}.m-cal u.p{background:repeating-linear-gradient(135deg,var(--pc) 0 2px,transparent 2px 3px)}
+.m-cal span.j{background:linear-gradient(150deg,#B0136E,#E2589F 60%,#F0B429 150%);color:#fff;border-color:transparent;box-shadow:0 0 0 1.5px #F0B429,0 8px 12px -6px rgba(176,19,110,.8);transform:translateZ(10px) translateY(-1px)}
+.m-cal span.j u{background:rgba(255,255,255,.9)}
+.m-cal span.jp{border:1.5px dashed var(--airway)}
+.m-cal span.past{opacity:.45;box-shadow:none;animation:none!important;transform:none}
+.m-date.part small{background:var(--beacon);color:var(--ink)}
+.m-cal em{position:absolute;top:1px;right:2px;font-style:normal;font-size:.5rem;color:#FFE08A}
+@media (prefers-reduced-motion:no-preference){.m-cal span.j{animation:mglow 2.6s ease-in-out infinite alternate}}
+@keyframes mglow{to{box-shadow:0 0 0 1.5px #F0B429,0 10px 18px -4px rgba(226,88,159,.9)}}
+.m-hit{margin:0 .7rem;background:var(--paper);border-radius:14px;padding:.55rem .65rem;display:flex;gap:.6rem;align-items:center;border:1px solid #D3DEE5}
+.m-hit b{display:block;font-size:.78rem}.m-hit span{font-size:.66rem;color:var(--haze)}
+.m-date{width:40px;flex:none;border-radius:9px;overflow:hidden;text-align:center;background:#fff;box-shadow:0 2px 0 #D3DEE5,0 8px 12px -8px rgba(19,35,63,.6);transform:perspective(200px) rotateX(12deg)}
+.m-date small{display:block;background:var(--airway);color:#fff;font-size:.5rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;line-height:13px}
+.m-date b{font:800 1.25rem/26px var(--display)!important}
 </style>
 </head>
 <body>
@@ -362,6 +394,7 @@ footer p{max-width:70ch}
     <ul id="menu">
       <li><a href="#board">Right now</a></li>
       <li><a href="#features">Features</a></li>
+      <li><a href="#together">Off together</a></li>
       <li><a href="#crew">Crew feed</a></li>
       <li><a href="#pricing">Pricing</a></li>
       <li><a href="#install">Install</a></li>
@@ -516,6 +549,39 @@ footer p{max-width:70ch}
   </div>
 </section>
 
+<section class="feature flip" id="together">
+  <div class="wrap">
+    <div class="text">
+      <span class="new-badge">New</span> <span class="pro-badge">PRO</span>
+      <h3>Find the days you're both off</h3>
+      <p>Rosters never line up by luck. Share your days off with crew friends in one link, and the app lights up every day you're all free, so the brunch, the beach day or the weekend away actually happens.</p>
+      <ul class="ticks">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Your days come straight from Roster check, or tap them in yourself</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Send one link in any chat. Only off, duty and away are shared: no flights, routes or times</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Full and part days together, with streaks for a quick trip</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Match with one friend or the whole group, then add it to your calendar</li>
+      </ul>
+      <p class="small-print">Part of Pro. Friends' days stay on your phone.</p>
+    </div>
+    <div class="phone" aria-hidden="true">
+      <div class="screen">
+        <div class="screen-top"><b>Off together</b><span class="chip">+ Sara</span></div>
+        <div class="m-flap">
+          <small>Next day off together</small>
+          <div class="flaps"><i style="--d:0">F</i><i style="--d:1">R</i><i style="--d:2">I</i><i class="sp"></i><i style="--d:4">2</i><i style="--d:5">7</i><i class="sp"></i><i style="--d:7">N</i><i style="--d:8">O</i><i style="--d:9">V</i></div>
+          <span>3 days off with Sara</span>
+        </div>
+        <div class="m-card">
+          <div class="m-label">November · you <b style="color:#B0136E">■</b> Sara <b style="color:#2E7DD7">■</b></div>
+          <div class="m-cal"><i class="dow">M</i><i class="dow">T</i><i class="dow">W</i><i class="dow">T</i><i class="dow">F</i><i class="dow">S</i><i class="dow">S</i><i></i><i></i><i></i><i></i><i></i><i></i><span class="past"><b>1</b><s><u class="f" style="--pc:#B0136E"></u><u class="" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>2</b><s><u class="f" style="--pc:#B0136E"></u><u class="" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>3</b><s><u class="" style="--pc:#B0136E"></u><u class="f" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>4</b><s><u class="" style="--pc:#B0136E"></u><u class="f" style="--pc:#2E7DD7"></u></s></span><span class="j past"><b>5</b><em>✦</em><s><u class="f" style="--pc:#B0136E"></u><u class="f" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>6</b><s><u class="f" style="--pc:#B0136E"></u><u class="" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>7</b><s><u class="" style="--pc:#B0136E"></u><u class="" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>8</b><s><u class="" style="--pc:#B0136E"></u><u class="f" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>9</b><s><u class="f" style="--pc:#B0136E"></u><u class="" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>10</b><s><u class="" style="--pc:#B0136E"></u><u class="" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>11</b><s><u class="" style="--pc:#B0136E"></u><u class="f" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>12</b><s><u class="" style="--pc:#B0136E"></u><u class="f" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>13</b><s><u class="f" style="--pc:#B0136E"></u><u class="" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>14</b><s><u class="f" style="--pc:#B0136E"></u><u class="" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>15</b><s><u class="" style="--pc:#B0136E"></u><u class="" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>16</b><s><u class="" style="--pc:#B0136E"></u><u class="f" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>17</b><s><u class="" style="--pc:#B0136E"></u><u class="" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>18</b><s><u class="f" style="--pc:#B0136E"></u><u class="" style="--pc:#2E7DD7"></u></s></span><span class="past"><b>19</b><s><u class="" style="--pc:#B0136E"></u><u class="f" style="--pc:#2E7DD7"></u></s></span><span class="j past"><b>20</b><em>✦</em><s><u class="f" style="--pc:#B0136E"></u><u class="f" style="--pc:#2E7DD7"></u></s></span><span><b>21</b><s><u class="f" style="--pc:#B0136E"></u><u class="" style="--pc:#2E7DD7"></u></s></span><span class="jp"><b>22</b><s><u class="p" style="--pc:#B0136E"></u><u class="f" style="--pc:#2E7DD7"></u></s></span><span><b>23</b><s><u class="" style="--pc:#B0136E"></u><u class="f" style="--pc:#2E7DD7"></u></s></span><span><b>24</b><s><u class="f" style="--pc:#B0136E"></u><u class="" style="--pc:#2E7DD7"></u></s></span><span><b>25</b><s><u class="" style="--pc:#B0136E"></u><u class="" style="--pc:#2E7DD7"></u></s></span><span><b>26</b><s><u class="" style="--pc:#B0136E"></u><u class="" style="--pc:#2E7DD7"></u></s></span><span class="j"><b>27</b><em>✦</em><s><u class="f" style="--pc:#B0136E"></u><u class="f" style="--pc:#2E7DD7"></u></s></span><span class="j"><b>28</b><em>✦</em><s><u class="f" style="--pc:#B0136E"></u><u class="f" style="--pc:#2E7DD7"></u></s></span><span class="j"><b>29</b><em>✦</em><s><u class="f" style="--pc:#B0136E"></u><u class="f" style="--pc:#2E7DD7"></u></s></span><span><b>30</b><s><u class="" style="--pc:#B0136E"></u><u class="f" style="--pc:#2E7DD7"></u></s></span></div>
+        </div>
+        <div class="m-hit"><div class="m-date part"><small>Nov</small><b>22</b></div><div><b>Sunday 22 Nov</b><span>Free part of the day · you're home by 14:00</span></div></div>
+        <div class="m-hit"><div class="m-date"><small>Nov</small><b>27</b></div><div><b>Fri 27 – Sun 29 Nov</b><span>3 days off together · trip idea!</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="ring-sec" id="postcards">
   <div class="wrap">
     <div class="sec-head">
@@ -582,6 +648,7 @@ footer p{max-width:70ch}
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Everything in Free</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>The full crew feed in every city</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Roster check: flight time limits and fatigue from a roster picture</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Off together: share rosters with crew friends, find your days off together</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Fatigue dashboard with trip-by-trip charts</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Money insights and Excel export</li>
         </ul>

@@ -14,6 +14,14 @@
 <link rel="manifest" href="manifest.webmanifest">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <script src="config.js"></script>
+<script>/* Android app: use the phone's share sheet, calendar and Downloads (see MainActivity.Bridge) */
+(function(){var A=window.LayoverAndroid;if(!A)return;
+  if(!navigator.share)navigator.share=function(d){d=d||{};A.share(d.title||"",[d.text,d.url].filter(Boolean).join(" "));return Promise.resolve();};
+  var click=HTMLAnchorElement.prototype.click;
+  HTMLAnchorElement.prototype.click=function(){var h=this.href||"",n=this.download;
+    if(n&&h.indexOf("blob:")===0){fetch(h).then(function(r){return r.blob()}).then(function(b){return b.text().then(function(t){A.saveFile(n,b.type||"",t)})});return;}
+    return click.apply(this,arguments);};
+})();</script>
 <script>
 /* Phone website: talks straight to free map, weather and currency services (no keys needed). */
 window.LAYOVER_WEB=true;
@@ -975,6 +983,204 @@ main .wrap{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
 .trpic.in{color:transparent}
 @media (max-width:380px){.pc-what{font-size:1.75rem}.pc-stamp{width:58px;height:68px}.postcard figcaption{right:80px}}
 @media (prefers-reduced-motion:reduce){.postcard,.postcard.in{transition:none;transform:none}}
+
+/* ---- v6.0: depth. Aurora sky, 3D tilt, split-flap board, Off together ---- */
+:root{--c-off:#13A36B;--c-part:#E3A21A;--c-duty:#2E4E86;--c-away:#8A4FD8;--c-sby:#7B879A;--c-leave:#0FA3B1;--depth:0 1px 0 rgba(255,255,255,.7) inset,0 2px 0 color-mix(in srgb,var(--line) 80%,transparent),0 22px 40px -28px rgba(19,35,63,.6)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--c-off:#3FD08F;--c-part:#F0B429;--c-duty:#6F8FD0;--c-away:#B48CF2;--c-leave:#3CC8D4;--depth:0 1px 0 rgba(255,255,255,.05) inset,0 22px 40px -26px rgba(0,0,0,.85)}}
+:root[data-theme="dark"]{--c-off:#3FD08F;--c-part:#F0B429;--c-duty:#6F8FD0;--c-away:#B48CF2;--c-leave:#3CC8D4;--depth:0 1px 0 rgba(255,255,255,.05) inset,0 22px 40px -26px rgba(0,0,0,.85)}
+
+/* aurora sky behind everything */
+.aurora{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.aurora i{position:absolute;width:70vmax;height:70vmax;border-radius:50%;filter:blur(80px);opacity:.33;mix-blend-mode:multiply}
+.aurora i:nth-child(1){background:radial-gradient(circle,#E2589F,transparent 62%);left:-30vmax;top:-30vmax}
+.aurora i:nth-child(2){background:radial-gradient(circle,#4E7CD6,transparent 62%);right:-34vmax;top:10vh}
+.aurora i:nth-child(3){background:radial-gradient(circle,#F0B429,transparent 62%);left:10vw;bottom:-46vmax;opacity:.22}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .aurora i{mix-blend-mode:screen;opacity:.22}}
+:root[data-theme="dark"] .aurora i{mix-blend-mode:screen;opacity:.22}
+@media (prefers-reduced-motion:no-preference){
+  .aurora i:nth-child(1){animation:drift1 26s ease-in-out infinite alternate}
+  .aurora i:nth-child(2){animation:drift2 32s ease-in-out infinite alternate}
+  .aurora i:nth-child(3){animation:drift1 38s ease-in-out infinite alternate-reverse}
+}
+@keyframes drift1{to{transform:translate(18vw,12vh) scale(1.15)}}
+@keyframes drift2{to{transform:translate(-14vw,20vh) scale(.9)}}
+
+/* headings with a little shine */
+.pagehead h1{background:linear-gradient(100deg,var(--ink) 30%,var(--accent) 120%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pagehead h1 .dn{-webkit-text-fill-color:var(--accent)}
+
+/* glassy cards with real depth */
+main .card{background:color-mix(in srgb,var(--surface) 86%,transparent);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);box-shadow:var(--depth)}
+
+/* pointer tilt (fx3d.js sets --rx/--ry) */
+.pass,.tg-hero,.tile,.tg-today,.card.tilt{transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transform-style:preserve-3d;transition:transform .5s var(--ease),box-shadow .3s var(--ease)}
+.tilting{transition:transform .08s linear,box-shadow .3s var(--ease)}
+.pass::after,.tg-hero::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:radial-gradient(45% 55% at var(--gx,50%) var(--gy,0%),rgba(255,255,255,.14),transparent 70%);opacity:0;transition:opacity .3s}
+.tilting.pass::after,.tilting.tg-hero::after{opacity:1}
+
+/* tiles: raised keys */
+.tile{box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 4px 0 color-mix(in srgb,var(--line) 90%,transparent),0 16px 26px -20px rgba(19,35,63,.55)}
+.tile:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb,var(--line) 90%,transparent)}
+.tile .ti{box-shadow:0 6px 14px -6px var(--tc,#000),inset 0 1px 0 rgba(255,255,255,.35);transform:translateZ(18px)}
+
+/* bottom bar: lifted active key */
+.tabbar{box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 22px 44px -20px rgba(19,35,63,.6)}
+.tabbar button[aria-selected="true"] svg{background:linear-gradient(160deg,color-mix(in srgb,var(--accent) 70%,var(--ink)),var(--ink));stroke:#fff;box-shadow:0 8px 16px -8px var(--accent),inset 0 1px 0 rgba(255,255,255,.25);transform:translateY(-2px)}
+@media (prefers-reduced-motion:no-preference){.tabbar svg{transition:transform .25s var(--ease),background-color .2s}}
+
+/* cards swing up into place */
+@media (prefers-reduced-motion:no-preference){
+  .fx-reveal main .card:not(.seen),.fx-reveal main .tg-hero:not(.seen){opacity:0;transform:perspective(900px) translateY(22px) rotateX(9deg)}
+  .fx-reveal main .card.seen,.fx-reveal main .tg-hero.seen{animation:swing .6s var(--ease) both}
+}
+@keyframes swing{from{opacity:0;transform:perspective(900px) translateY(22px) rotateX(9deg)}to{opacity:1;transform:perspective(900px)}}
+@media print{.fx-reveal main .card,.fx-reveal main .tg-hero{opacity:1!important;transform:none!important}.aurora{display:none}}
+
+/* ---------- Off together ---------- */
+.tg-hero{position:relative;overflow:hidden;border-radius:26px;color:#fff;min-height:236px;display:grid;align-items:end;padding:20px;
+  background:radial-gradient(70% 60% at 85% 10%,rgba(226,88,159,.45),transparent 70%),radial-gradient(60% 60% at 0% 100%,rgba(78,124,214,.45),transparent 70%),linear-gradient(160deg,#1C2F50,#081222);
+  box-shadow:0 30px 50px -30px rgba(19,35,63,.8)}
+.tg-copy{position:relative;z-index:1;display:grid;gap:8px;transform:translateZ(30px)}
+.tg-kick{font-family:var(--display);font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:.875rem;color:var(--beacon)}
+.tg-copy p{margin:0;color:#C9D6E4;font-size:1rem}
+
+/* 3D floating calendar pages */
+.tg-scene{position:absolute;right:-6px;top:4px;width:220px;height:170px;perspective:700px;pointer-events:none}
+.tg-orbit{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(14deg) rotateY(-28deg)}
+.tg-page{position:absolute;top:26px;width:70px;height:84px;border-radius:12px;background:linear-gradient(180deg,#F7FAFB,#DCE6EB);color:#13233F;
+  display:grid;grid-template-rows:24px 1fr;overflow:hidden;box-shadow:0 18px 30px -12px rgba(0,0,0,.6);transform-style:preserve-3d;backface-visibility:hidden}
+.tg-page b{display:grid;place-items:center;background:#B0136E;color:#fff;font-family:var(--display);font-weight:800;font-size:.8125rem;letter-spacing:.1em}
+.tg-page i{display:grid;place-items:center;font-style:normal;font-family:var(--display);font-weight:800;font-size:2.3rem;line-height:1}
+.tg-page.p1{left:4px;transform:translateZ(-40px) rotateY(18deg)}
+.tg-page.p2{left:72px;transform:translateZ(30px) translateY(-14px);box-shadow:0 0 0 3px #F0B429,0 26px 40px -12px rgba(240,180,41,.55)}
+.tg-page.p2 b{background:linear-gradient(90deg,#B0136E,#E2589F)}
+.tg-page.p3{left:140px;transform:translateZ(-40px) rotateY(-18deg)}
+.tg-plane{position:absolute;width:26px;height:26px;fill:#fff;filter:drop-shadow(0 4px 6px rgba(0,0,0,.4))}
+.tg-plane.a{left:36px;top:2px;transform:rotate(60deg)}
+.tg-plane.b{right:18px;top:124px;transform:rotate(-120deg);fill:#F0B429}
+@media (prefers-reduced-motion:no-preference){
+  .tg-orbit{animation:orbit 9s ease-in-out infinite alternate}
+  .tg-page.p2{animation:bob 3.2s ease-in-out infinite}
+  .tg-plane.a{animation:fly-a 7s ease-in-out infinite}
+  .tg-plane.b{animation:fly-b 7s ease-in-out infinite}
+}
+@keyframes orbit{from{transform:rotateX(14deg) rotateY(-34deg)}to{transform:rotateX(6deg) rotateY(-12deg)}}
+@keyframes bob{0%,100%{transform:translateZ(30px) translateY(-14px)}50%{transform:translateZ(46px) translateY(-22px)}}
+@keyframes fly-a{0%{transform:translate(-30px,20px) rotate(60deg);opacity:0}20%{opacity:1}55%{transform:translate(50px,48px) rotate(100deg);opacity:1}70%,100%{transform:translate(64px,56px) rotate(110deg);opacity:0}}
+@keyframes fly-b{0%{transform:translate(30px,10px) rotate(-120deg);opacity:0}20%{opacity:1}55%{transform:translate(-56px,-50px) rotate(-70deg);opacity:1}70%,100%{transform:translate(-70px,-60px) rotate(-60deg);opacity:0}}
+@media (max-width:400px){.tg-scene{transform:scale(.82);transform-origin:100% 0}}
+
+/* split-flap departure board, each letter flips in 3D */
+.flapboard{display:flex;flex-wrap:wrap;gap:3px;min-height:56px;perspective:300px}
+.fl{position:relative;width:32px;height:48px;border-radius:6px;background:#0A1426;box-shadow:0 6px 12px -6px rgba(0,0,0,.8),inset 0 0 0 1px rgba(255,255,255,.06);
+  font-family:var(--display);font-weight:800;font-size:2.1rem;color:#F7FAFB;transform-style:preserve-3d}
+.fl.sp{width:12px;background:transparent;box-shadow:none}
+.fl b,.fl i{position:absolute;left:0;right:0;height:50%;overflow:hidden;display:flex;justify-content:center;font-style:normal;background:#0A1426;backface-visibility:hidden}
+.fl.sp b,.fl.sp i{display:none}
+.fl .t,.fl .ft{top:0;align-items:flex-end;border-radius:6px 6px 0 0;line-height:48px;align-items:flex-start}
+.fl .b,.fl .fb{bottom:0;border-radius:0 0 6px 6px;line-height:0;align-items:flex-start}
+.fl .b,.fl .fb{background:#0D1A30}
+.fl .ft{transform-origin:50% 100%;z-index:2}
+.fl .fb{transform-origin:50% 0;transform:rotateX(90deg);z-index:2}
+.fl::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.65);z-index:3}
+.flapboard.go .ft{animation:flapT .32s ease-in both;animation-delay:calc(var(--i)*55ms)}
+.flapboard.go .fb{animation:flapB .32s ease-out both;animation-delay:calc(var(--i)*55ms + .3s)}
+@keyframes flapT{to{transform:rotateX(-90deg)}}
+@keyframes flapB{from{transform:rotateX(90deg)}to{transform:rotateX(0)}}
+.fl .t{visibility:hidden}.flapboard.go .fl .t{animation:showT 0s linear both;animation-delay:calc(var(--i)*55ms)}
+@keyframes showT{to{visibility:visible}}
+@media (prefers-reduced-motion:reduce){.flapboard.go .ft{display:none}.flapboard.go .fb{animation:none;transform:none}.fl .t{visibility:visible}}
+@media (max-width:400px){.fl{width:26px;height:40px;font-size:1.75rem}.fl .t,.fl .ft{line-height:40px}.fl.sp{width:8px}}
+@media (max-width:340px){.fl{width:22px;height:36px;font-size:1.5rem}.fl .t,.fl .ft{line-height:36px}}
+
+/* calendars */
+.tg-cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;perspective:800px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.tg-dow{font-size:.75rem;color:var(--muted);text-align:center;font-weight:700}
+.tg-cell{position:relative;min-height:56px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:5px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;text-align:left;min-width:0;color:var(--ink);
+  box-shadow:0 2px 0 color-mix(in srgb,var(--line) 85%,transparent);transition:transform .2s var(--ease),box-shadow .2s var(--ease),background-color .2s}
+button.tg-cell:hover{transform:translateY(-2px)}
+button.tg-cell:active{transform:translateY(1px);box-shadow:none}
+.tg-cell .n{font-weight:700;font-size:.875rem;line-height:1}
+.tg-cell .st{font-family:var(--display);font-weight:800;font-size:.75rem;letter-spacing:.05em;line-height:1;color:#fff;background:var(--cc);border-radius:6px;padding:3px 4px;max-width:100%;overflow:hidden}
+.tg-cell.past{opacity:.5}
+.tg-cell.now{outline:2px solid var(--ink);outline-offset:1px}
+.tg-cell .man{position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.tg-cell.c-O{--cc:var(--c-off);background:color-mix(in srgb,var(--c-off) 14%,var(--surface));border-color:color-mix(in srgb,var(--c-off) 40%,var(--line))}
+.tg-cell.c-L{--cc:var(--c-leave);background:color-mix(in srgb,var(--c-leave) 14%,var(--surface))}
+.tg-cell.c-P{--cc:var(--c-part);background:color-mix(in srgb,var(--c-part) 12%,var(--surface))}
+.tg-cell.c-D{--cc:var(--c-duty)}.tg-cell.c-A{--cc:var(--c-away)}.tg-cell.c-S{--cc:var(--c-sby)}
+.tg-brush{display:flex;gap:6px;flex-wrap:wrap}
+.tg-brush .chip{display:inline-flex;align-items:center;gap:6px}
+.tg-brush .chip::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--cc,transparent);border:1px solid var(--cc,var(--muted))}
+.b-O{--cc:var(--c-off)}.b-P{--cc:var(--c-part)}.b-D{--cc:var(--c-duty)}.b-A{--cc:var(--c-away)}.b-L{--cc:var(--c-leave)}
+.tg-brush .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+
+/* match calendar: one bar per person, joint days pop out in 3D */
+.tg-cell.m .bars{display:flex;gap:2px;width:100%}
+.tg-cell.m .bars i{flex:1;height:6px;border-radius:3px;background:color-mix(in srgb,var(--muted) 22%,transparent)}
+.tg-cell.m .bars i.f{background:var(--pc)}
+.tg-cell.m .bars i.p{background:repeating-linear-gradient(135deg,var(--pc) 0 3px,transparent 3px 5px);box-shadow:inset 0 0 0 1px var(--pc)}
+.tg-cell.m .bars i.u{background:transparent;border:1px dashed color-mix(in srgb,var(--muted) 45%,transparent)}
+.tg-cell.j-full{background:linear-gradient(150deg,#B0136E,#E2589F 55%,#F0B429 140%);color:#fff;border-color:transparent;
+  transform:translateZ(18px) translateY(-3px);box-shadow:0 14px 22px -10px rgba(176,19,110,.7),0 0 0 2px #F0B429;z-index:1}
+.tg-cell.j-full .bars i{background:rgba(255,255,255,.9)!important}
+.tg-cell.j-full .spark{position:absolute;top:3px;right:6px;color:#FFE08A;font-size:.875rem;text-shadow:0 0 8px rgba(255,224,138,.9)}
+.tg-cell.j-part{border:2px dashed var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+@media (prefers-reduced-motion:no-preference){.tg-cell.j-full:not(.past){animation:jpop .7s var(--ease) both}}
+@keyframes jpop{from{transform:rotateX(-70deg);opacity:0}to{transform:translateZ(18px) translateY(-3px)}}
+.tg-key{display:inline-block;vertical-align:-2px;width:14px;height:14px;border-radius:4px;margin-left:2px;font-size:.6875rem;line-height:14px;text-align:center}
+.tg-key.full{background:linear-gradient(150deg,#B0136E,#E2589F);color:#FFE08A}
+.tg-key.part{border:2px dashed var(--accent)}
+#tgLegend span::before{border-radius:50%}
+@media (max-width:380px){.tg-cal{gap:3px}.tg-cell{min-height:50px;padding:4px 3px;border-radius:9px}.tg-cell .st{font-size:.625rem;padding:2px 3px}}
+
+/* upcoming joint days */
+.tg-hits li{grid-template-columns:auto 1fr auto;gap:12px}
+.tg-hits li > div:nth-child(2){display:grid;min-width:0}
+.tg-date{width:52px;height:56px;border-radius:12px;display:grid;grid-template-rows:18px 1fr;overflow:hidden;text-align:center;background:var(--surface);box-shadow:0 2px 0 var(--line),0 10px 18px -12px rgba(19,35,63,.6);transform:perspective(300px) rotateX(10deg)}
+.tg-date small{background:var(--accent);color:#fff;font-weight:700;font-size:.6875rem;text-transform:uppercase;letter-spacing:.08em;line-height:18px}
+.tg-date b{font-family:var(--display);font-weight:800;font-size:1.6rem;line-height:38px}
+.tg-hit.part .tg-date small{background:var(--c-part);color:#13233F}
+.tg-ha{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:420px){.tg-hits li{grid-template-columns:auto 1fr}.tg-ha{grid-column:1/-1;justify-content:flex-start}}
+.list li.tg-emptyrow{grid-template-columns:1fr}
+
+/* crew friends */
+.tg-friend{grid-template-columns:auto 1fr auto!important;gap:12px!important}
+.tg-av{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:1.3rem;color:#fff;
+  background:linear-gradient(150deg,var(--pc),color-mix(in srgb,var(--pc) 60%,#000));box-shadow:0 8px 16px -8px var(--pc);transform:perspective(200px) rotateY(-12deg)}
+.tg-fi{display:grid;min-width:0}
+.tg-fi b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tg-next{font-size:.875rem;color:var(--good)}.tg-next.part{color:var(--warn)}
+.tg-fa{display:flex;align-items:center;gap:4px}
+.tg-pick[aria-pressed="true"]{background:var(--pc)!important;border-color:var(--pc)!important;color:#fff!important}
+#tgCode{font-size:.875rem}
+
+/* Today teaser */
+.tg-today{position:relative;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;width:100%;text-align:left;border:0;border-radius:22px;padding:16px 18px;color:#fff;
+  background:linear-gradient(120deg,#13233F 0%,#4B2A93 55%,#B0136E 100%);box-shadow:0 22px 36px -24px rgba(75,42,147,.9),inset 0 1px 0 rgba(255,255,255,.15)}
+.tg-today-txt{display:grid;min-width:0;gap:1px}
+body.locked .tg-today-txt small::after{content:"PRO";margin-left:8px;background:var(--beacon);color:#13233F;border-radius:5px;padding:1px 5px;letter-spacing:.06em}
+.tg-today-txt small{font-family:var(--display);font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--beacon);font-size:.8125rem}
+.tg-today-txt b{font-family:var(--display);font-weight:800;font-size:1.6rem;line-height:1.05}
+.tg-today-txt span{color:#D9E2EE;font-size:.9375rem}
+.tg-today-go{font-size:2rem;line-height:1;color:var(--beacon)}
+.tg-today-ico{position:relative;width:52px;height:52px;transform-style:preserve-3d;transform:perspective(200px) rotateY(-18deg) rotateX(8deg)}
+.tg-today-ico i{position:absolute;width:38px;height:44px;border-radius:9px;background:#F7FAFB;box-shadow:0 10px 16px -8px rgba(0,0,0,.6)}
+.tg-today-ico i::before{content:"";display:block;height:12px;border-radius:9px 9px 0 0;background:#E2589F}
+.tg-today-ico i:first-child{left:-2px;top:8px;transform:translateZ(-10px) rotate(-8deg)}
+.tg-today-ico i:last-child{left:16px;top:0;transform:translateZ(10px) rotate(6deg)}
+.tg-today-ico i:last-child::before{background:#F0B429}
+@media (prefers-reduced-motion:no-preference){.tg-today-ico{animation:tilty 5s ease-in-out infinite alternate}}
+@keyframes tilty{to{transform:perspective(200px) rotateY(18deg) rotateX(-6deg)}}
+
+/* incoming share */
+.tg-in{text-align:left}
+.tg-in-art{height:90px;position:relative;perspective:400px}
+.tg-in-art span{position:absolute;top:8px;width:62px;height:74px;border-radius:12px;background:linear-gradient(180deg,#F7FAFB,#DCE6EB);box-shadow:0 16px 26px -12px rgba(19,35,63,.6),inset 0 14px 0 #B0136E}
+.tg-in-art span:first-child{left:8px;transform:rotateY(24deg) rotate(-6deg)}
+.tg-in-art span:last-child{left:58px;transform:rotateY(-24deg) rotate(6deg);box-shadow:0 16px 26px -12px rgba(19,35,63,.6),inset 0 14px 0 #F0B429}
 </style>
 
 <div class="login" id="login" hidden>
@@ -1044,6 +1250,7 @@ main .wrap{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
     <li><b>Fatigue dashboard:</b> rules, weekly load, trip charts.</li>
     <li><b>Money insights:</b> allowance kept, cost of each layover, Excel export.</li>
     <li><b>Roster check:</b> roster to calendar, limits and fatigue checked.</li>
+    <li><b>Off together:</b> share rosters with crew friends and find your days off together.</li>
   </ul>
   <div class="plans" id="proPlans">
     <button class="planbtn best" type="button" data-plan="yearly"><b>Yearly</b><span class="p" id="proYear"></span><small>per year · best value</small></button>
@@ -1101,6 +1308,12 @@ main .wrap{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
     <span class="pc-stamp" aria-hidden="true"><b></b></span>
     <a class="pc-credit" href="#" target="_blank" rel="noopener">Photo: Wikipedia</a>
   </figure>
+
+  <button type="button" class="tg-today" id="tgToday">
+    <span class="tg-today-ico" aria-hidden="true"><i></i><i></i></span>
+    <span class="tg-today-txt"><small>Off together</small><b id="tgTodayT">Off together</b><span id="tgTodayL">Share rosters with crew friends and see which days you're all off.</span></span>
+    <span class="tg-today-go" id="tgTodayGo" aria-hidden="true">›</span>
+  </button>
 
   <div class="card">
     <div class="cardhead"><h2>Your free time</h2><span class="hint">Rest comes first</span></div>
@@ -1372,6 +1585,7 @@ main .wrap{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
     <div class="seg" role="tablist" aria-label="Rest">
       <button type="button" data-sub="layovers" aria-selected="true">Layovers</button>
       <button type="button" data-sub="roster" aria-selected="false">Roster check <span class="probadge">PRO</span></button>
+      <button type="button" data-sub="together" aria-selected="false">Together <span class="probadge">PRO</span></button>
     </div>
     <div class="chips" id="fgPeriod">
       <button class="chip" type="button" data-d="7" aria-pressed="false">Last 7 days</button>
@@ -1549,6 +1763,86 @@ main .wrap{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
       </div>
       <p class="hint" id="rcEdMsg" role="alert" style="color:var(--bad)"></p>
       <div class="row" style="justify-content:space-between"><button class="btn ghost" type="button" id="rcEdDel">Delete</button><span class="row"><button class="btn ghost" type="button" id="rcEdCancel">Cancel</button><button class="btn" type="button" id="rcEdSave">Save</button></span></div>
+    </div>
+  </div>
+  <div data-panel="together" class="panel" id="tgPanel" hidden>
+    <div class="tg-hero" id="tgHero">
+      <div class="tg-scene" aria-hidden="true">
+        <div class="tg-orbit">
+          <span class="tg-page p1"><b>FRI</b><i>27</i></span>
+          <span class="tg-page p2"><b>SAT</b><i>28</i></span>
+          <span class="tg-page p3"><b>SUN</b><i>29</i></span>
+        </div>
+        <svg class="tg-plane a" viewBox="0 0 24 24"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V8.5l-8 5v2l8-2.5V18l-2 1.5V21l3.5-1 3.5 1v-1.5L13 18v-5z"/></svg>
+        <svg class="tg-plane b" viewBox="0 0 24 24"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V8.5l-8 5v2l8-2.5V18l-2 1.5V21l3.5-1 3.5 1v-1.5L13 18v-5z"/></svg>
+      </div>
+      <div class="tg-copy">
+        <span class="tg-kick" id="tgKick">Next day off together</span>
+        <div class="flapboard" id="tgFlap" role="img" aria-label=""></div>
+        <p id="tgHeroLine"></p>
+      </div>
+    </div>
+
+    <div class="card prolock">
+      <div class="cardhead"><h2>Off together</h2><span class="probadge">PRO</span></div>
+      <p class="hint">Share rosters with crew friends. See every day you're all off.</p>
+      <ul class="insights">
+        <li>Your days straight from Roster check, or tap them in</li>
+        <li>One link to share in any chat: no flights, routes or times</li>
+        <li>Full and part days together, streaks for a quick trip</li>
+        <li>Match one friend or the whole group, add it to your calendar</li>
+      </ul>
+      <button class="btn proGo" type="button" style="justify-self:start">Unlock with Pro</button>
+    </div>
+
+    <div class="card" id="tgMatchCard" data-pro>
+      <div class="cardhead"><h2>Off together</h2><span class="hint" id="tgMonthSum"></span></div>
+      <div class="chips" id="tgPicks" aria-label="Match with" hidden></div>
+      <div class="rc-calhead"><span class="label">Everyone free <b class="tg-key full">✦</b> · part of the day <b class="tg-key part"></b></span><div class="row"><button class="btn ghost rc-sm tgPrev" type="button" aria-label="Previous month">‹</button><span class="label tgMonthLbl" style="min-width:104px;text-align:center"></span><button class="btn ghost rc-sm tgNext" type="button" aria-label="Next month">›</button></div></div>
+      <div class="tg-cal" id="tgMatchCal" role="grid"></div>
+      <div class="legend" id="tgLegend"></div>
+      <ul class="list tg-hits" id="tgList"></ul>
+    </div>
+
+    <div class="card" data-pro>
+      <div class="cardhead"><h2>Your days</h2><span class="hint" id="tgMeSrc"></span></div>
+      <label class="field"><span class="label">Your name, as crew friends know you</span><input id="tgName" maxlength="24" placeholder="e.g. Sam" autocomplete="nickname"></label>
+      <p class="hint" id="tgNameMsg" role="status" style="color:var(--bad)"></p>
+      <div class="tg-brush" id="tgBrush" role="toolbar" aria-label="Mark days as">
+        <button type="button" class="chip b-O" data-b="O" aria-pressed="true">Off</button>
+        <button type="button" class="chip b-P" data-b="P" aria-pressed="false">Part day</button>
+        <button type="button" class="chip b-D" data-b="D" aria-pressed="false">Duty</button>
+        <button type="button" class="chip b-A" data-b="A" aria-pressed="false">Away</button>
+        <button type="button" class="chip b-L" data-b="L" aria-pressed="false">Leave</button>
+        <button type="button" class="chip b-clear" data-b="clear" aria-pressed="false">Clear</button>
+      </div>
+      <div class="rc-calhead"><span class="label" id="tgMeOff"></span><div class="row"><button class="btn ghost rc-sm tgPrev" type="button" aria-label="Previous month">‹</button><span class="label tgMonthLbl" style="min-width:104px;text-align:center"></span><button class="btn ghost rc-sm tgNext" type="button" aria-label="Next month">›</button></div></div>
+      <div class="tg-cal" id="tgMeCal"></div>
+      <p class="hint">Pick a type, then tap or drag across days. Your Roster check fills this in for you.</p>
+      <div class="row"><button class="btn" type="button" id="tgShare">Share my days</button><button class="btn ghost" type="button" id="tgClearHand" hidden>Undo hand changes</button></div>
+      <div class="row cform" id="tgCodeBox" hidden><input id="tgCode" readonly aria-label="Your share link"><button class="btn ghost" type="button" id="tgCopy">Copy</button></div>
+      <p class="note">Only off, duty, away and leave travel in the link. No flights, routes, times or hotels.</p>
+    </div>
+
+    <div class="card" data-pro>
+      <div class="cardhead"><h2>Crew friends</h2><span class="hint">Saved on this device</span></div>
+      <ul class="list" id="tgCrewList"></ul>
+      <form class="row cform" id="tgAddForm"><input id="tgPaste" placeholder="Paste a friend's link or code" aria-label="Friend's link or code" autocomplete="off" spellcheck="false"><button class="btn" type="submit">Add</button></form>
+      <p class="hint" id="tgAddMsg" role="status" style="color:var(--bad)"></p>
+      <button class="btn ghost" type="button" id="tgExample" style="justify-self:start">See an example friend</button>
+    </div>
+
+    <div class="card">
+      <details class="more" style="border:0;padding:0">
+        <summary>How Off together works</summary>
+        <ul class="insights">
+          <li><b>Your days</b> come from Roster check: days with no duty are days off, a short duty that ends by 16:00 or starts from 17:00 at home is a part day, and nights at an outstation are away.</li>
+          <li><b>Share my days</b> makes a link holding only those day types for the coming months. Send it in any chat.</li>
+          <li><b>When a friend opens it</b>, the app shows the days you are both off. Send yours back so they see the same.</li>
+          <li><b>✦ days</b> are days everyone picked is off or on leave. Part days mean everyone is free for at least part of the day.</li>
+          <li>Rosters change. Share again after a swap or a new month.</li>
+        </ul>
+      </details>
     </div>
   </div>
 </section>
@@ -1886,7 +2180,7 @@ function setDest(d){
 /* ---------- tabs ---------- */
 /* Five sections in the bottom bar; some have sub-pages chosen with a segmented control */
 const TAB_ALIAS={plan:["today"],near:["explore","nearby"],ideas:["explore","ideas"],pack:["explore","nearby"],
-  tips:["notebook","notes"],lists:["notebook","notes"],journal:["notebook","journal"],fatigue:["rest","layovers"],layovers:["rest","layovers"],roster:["rest","roster"],
+  tips:["notebook","notes"],lists:["notebook","notes"],journal:["notebook","journal"],fatigue:["rest","layovers"],layovers:["rest","layovers"],roster:["rest","roster"],together:["rest","together"],
   spending:["money","summary"],allowance:["money","summary"]};
 const on=(id,ev,fn)=>{ const el=$(id); if(el) el.addEventListener(ev,fn); };
 function showSub(tab,sub){
@@ -1894,7 +2188,7 @@ function showSub(tab,sub){
   sec.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-selected",x.dataset.sub===sub));
   sec.querySelectorAll(":scope [data-panel]").forEach(p=>p.hidden=p.dataset.panel!==sub);
   if(tab==="money") $("spPeriod").hidden=sub==="add";
-  if(tab==="rest") $("fgPeriod").hidden=sub==="roster";
+  if(tab==="rest") $("fgPeriod").hidden=sub!=="layovers";
   if(sub==="nearby"&&nb.map) setTimeout(()=>nb.map.invalidateSize(),50);
 }
 function showTab(name,sub){
@@ -4176,6 +4470,15 @@ init();
 
 </script>
 
+<div class="backdrop" id="tgInBg" hidden></div>
+<div class="sheet tg-in" id="tgIn" hidden role="dialog" aria-modal="true" aria-labelledby="tgInTitle">
+  <div class="tg-in-art" aria-hidden="true"><span></span><span></span></div>
+  <h2 id="tgInTitle">A crew friend shared their days off</h2>
+  <p class="hint" id="tgInLine"></p>
+  <p class="hint">Add them to see the days you're both off. Only day types are shared: no flights, routes or times.</p>
+  <div class="row"><button class="btn" type="button" id="tgInAdd">Add and compare</button><button class="btn ghost" type="button" id="tgInNo">Not now</button></div>
+</div>
+
 <div class="legal-sheet" id="legalSheet" role="dialog" aria-modal="true" aria-labelledby="legalTitle" hidden>
   <div class="legal-bar">
     <button class="btn ghost legal-close" type="button" id="legalClose" aria-label="Close">‹ Back</button>
@@ -4237,4 +4540,6 @@ init();
   window.openLegal=open;
 })();
 </script>
+<script src="together.js"></script>
+<script src="fx3d.js"></script>
 </html>
