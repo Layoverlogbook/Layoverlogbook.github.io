@@ -1161,6 +1161,7 @@ button.tg-cell:active{transform:translateY(1px);box-shadow:none}
 .tg-today{position:relative;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;width:100%;text-align:left;border:0;border-radius:22px;padding:16px 18px;color:#fff;
   background:linear-gradient(120deg,#13233F 0%,#4B2A93 55%,#B0136E 100%);box-shadow:0 22px 36px -24px rgba(75,42,147,.9),inset 0 1px 0 rgba(255,255,255,.15)}
 .tg-today-txt{display:grid;min-width:0;gap:1px}
+body.locked .tg-today-txt small::after{content:"PRO";margin-left:8px;background:var(--beacon);color:#13233F;border-radius:5px;padding:1px 5px;letter-spacing:.06em}
 .tg-today-txt small{font-family:var(--display);font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--beacon);font-size:.8125rem}
 .tg-today-txt b{font-family:var(--display);font-weight:800;font-size:1.6rem;line-height:1.05}
 .tg-today-txt span{color:#D9E2EE;font-size:.9375rem}
@@ -1249,6 +1250,7 @@ button.tg-cell:active{transform:translateY(1px);box-shadow:none}
     <li><b>Fatigue dashboard:</b> rules, weekly load, trip charts.</li>
     <li><b>Money insights:</b> allowance kept, cost of each layover, Excel export.</li>
     <li><b>Roster check:</b> roster to calendar, limits and fatigue checked.</li>
+    <li><b>Off together:</b> share rosters with crew friends and find your days off together.</li>
   </ul>
   <div class="plans" id="proPlans">
     <button class="planbtn best" type="button" data-plan="yearly"><b>Yearly</b><span class="p" id="proYear"></span><small>per year · best value</small></button>
@@ -1583,7 +1585,7 @@ button.tg-cell:active{transform:translateY(1px);box-shadow:none}
     <div class="seg" role="tablist" aria-label="Rest">
       <button type="button" data-sub="layovers" aria-selected="true">Layovers</button>
       <button type="button" data-sub="roster" aria-selected="false">Roster check <span class="probadge">PRO</span></button>
-      <button type="button" data-sub="together" aria-selected="false">Off together</button>
+      <button type="button" data-sub="together" aria-selected="false">Together <span class="probadge">PRO</span></button>
     </div>
     <div class="chips" id="fgPeriod">
       <button class="chip" type="button" data-d="7" aria-pressed="false">Last 7 days</button>
@@ -1781,7 +1783,19 @@ button.tg-cell:active{transform:translateY(1px);box-shadow:none}
       </div>
     </div>
 
-    <div class="card" id="tgMatchCard">
+    <div class="card prolock">
+      <div class="cardhead"><h2>Off together</h2><span class="probadge">PRO</span></div>
+      <p class="hint">Share rosters with crew friends. See every day you're all off.</p>
+      <ul class="insights">
+        <li>Your days straight from Roster check, or tap them in</li>
+        <li>One link to share in any chat: no flights, routes or times</li>
+        <li>Full and part days together, streaks for a quick trip</li>
+        <li>Match one friend or the whole group, add it to your calendar</li>
+      </ul>
+      <button class="btn proGo" type="button" style="justify-self:start">Unlock with Pro</button>
+    </div>
+
+    <div class="card" id="tgMatchCard" data-pro>
       <div class="cardhead"><h2>Off together</h2><span class="hint" id="tgMonthSum"></span></div>
       <div class="chips" id="tgPicks" aria-label="Match with" hidden></div>
       <div class="rc-calhead"><span class="label">Everyone free <b class="tg-key full">✦</b> · part of the day <b class="tg-key part"></b></span><div class="row"><button class="btn ghost rc-sm tgPrev" type="button" aria-label="Previous month">‹</button><span class="label tgMonthLbl" style="min-width:104px;text-align:center"></span><button class="btn ghost rc-sm tgNext" type="button" aria-label="Next month">›</button></div></div>
@@ -1790,7 +1804,7 @@ button.tg-cell:active{transform:translateY(1px);box-shadow:none}
       <ul class="list tg-hits" id="tgList"></ul>
     </div>
 
-    <div class="card">
+    <div class="card" data-pro>
       <div class="cardhead"><h2>Your days</h2><span class="hint" id="tgMeSrc"></span></div>
       <label class="field"><span class="label">Your name, as crew friends know you</span><input id="tgName" maxlength="24" placeholder="e.g. Sam" autocomplete="nickname"></label>
       <p class="hint" id="tgNameMsg" role="status" style="color:var(--bad)"></p>
@@ -1810,7 +1824,7 @@ button.tg-cell:active{transform:translateY(1px);box-shadow:none}
       <p class="note">Only off, duty, away and leave travel in the link. No flights, routes, times or hotels.</p>
     </div>
 
-    <div class="card">
+    <div class="card" data-pro>
       <div class="cardhead"><h2>Crew friends</h2><span class="hint">Saved on this device</span></div>
       <ul class="list" id="tgCrewList"></ul>
       <form class="row cform" id="tgAddForm"><input id="tgPaste" placeholder="Paste a friend's link or code" aria-label="Friend's link or code" autocomplete="off" spellcheck="false"><button class="btn" type="submit">Add</button></form>

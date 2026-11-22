@@ -8,6 +8,8 @@ if(!el("tgPanel")) return;
 const ls={get:(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
   set:(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const locked=()=>document.body.classList.contains("locked");
+const goPro=()=>{ if(typeof openPro==="function") openPro(); };
 const say=t=>{ if(typeof toast==="function") toast(t); };
 
 /* ---------- day codes ---------- */
@@ -196,7 +198,8 @@ function renderHero(ps,up){
   const who=ps.slice(1).map(p=>p.name);
   const whoTxt=who.length>2?`${who.slice(0,-1).join(", ")} and ${who[who.length-1]}`:who.join(" and ");
   const mine=Object.keys(ps[0].days).some(k=>k>=todayK());
-  if(!mine){ flap("tgFlap","YOUR DAYS"); el("tgHeroLine").textContent="Load your roster in Roster check, or mark your days off below."; }
+  if(locked()){ flap("tgFlap","GO PRO"); el("tgHeroLine").textContent=buddies.length?`Unlock Pro to see your days off with ${whoTxt||"your crew"}.`:"Find every day you and your crew friends are off together."; }
+  else if(!mine){ flap("tgFlap","YOUR DAYS"); el("tgHeroLine").textContent="Load your roster in Roster check, or mark your days off below."; }
   else if(ps.length<2){ flap("tgFlap","ADD CREW"); el("tgHeroLine").textContent="Share your days. Find the ones you're all off."; }
   else if(!nx){ flap("tgFlap","NO MATCH"); el("tgHeroLine").textContent=`Nothing yet with ${whoTxt}.`; }
   else {
@@ -205,10 +208,11 @@ function renderHero(ps,up){
     const len=diffD(nx.from,nx.to)+1;
     el("tgHeroLine").textContent=`${nx.type==="full"?(len>1?`${len} days off`:"Day off"):"Part day free"} with ${whoTxt}`;
   }
-  el("tgKick").textContent=nx&&nx.from===todayK()?"Off together today":"Next day off together";
+  el("tgKick").textContent=locked()?"Off together · Pro":nx&&nx.from===todayK()?"Off together today":"Next day off together";
   /* Today teaser */
   const tc=el("tgToday"); if(!tc) return;
-  if(!buddies.length){ el("tgTodayT").textContent="Off together"; el("tgTodayL").textContent="Share rosters with crew friends and see which days you're all off."; }
+  if(locked()){ el("tgTodayT").textContent=buddies.length?"Days off together":"Off together"; el("tgTodayL").textContent=buddies.length?`See your days off with ${whoTxt}. Unlock with Pro.`:"Share rosters with crew friends and see which days you're all off."; }
+  else if(!buddies.length){ el("tgTodayT").textContent="Off together"; el("tgTodayL").textContent="Share rosters with crew friends and see which days you're all off."; }
   else if(nx){ el("tgTodayT").textContent=fmt(nx.from,{weekday:"long"}); el("tgTodayL").textContent=`${nx.type==="full"?"Your next day off":"Part day free"} with ${whoTxt}`; }
   else { el("tgTodayT").textContent="No match yet"; el("tgTodayL").textContent=`Ask ${whoTxt} for a newer roster.`; }
 }
@@ -222,6 +226,7 @@ async function shareText(text,title){
   catch(e){ window.prompt("Copy this and send it:",text); return "prompt"; }
 }
 async function shareMine(){
+  if(locked()){ goPro(); return; }
   if(!me.name){ el("tgName").focus(); el("tgNameMsg").textContent="Add the name your friends know you by first."; return; }
   const code=encode(); if(!code){ say("Mark some days first."); return; }
   el("tgCode").value=linkFor(code); el("tgCodeBox").hidden=false;
@@ -265,6 +270,7 @@ function offerPending(){
   const tog=upcoming([{days:myDays()},b],60).filter(u=>u.type==="full").reduce((s,u)=>s+diffD(u.from,u.to)+1,0);
   el("tgInTitle").textContent=`${b.name} shared their days off`;
   el("tgInLine").textContent=`${ks.length} days · ${off} days off ahead`+(Object.keys(myDays()).length?` · ${tog} off together with you`:"");
+  el("tgInAdd").textContent=locked()?"Unlock with Pro to compare":"Add and compare";
   el("tgIn").hidden=false; el("tgInBg").hidden=false;
 }
 function closeIn(){ el("tgIn").hidden=true; el("tgInBg").hidden=true; pending=null; }
@@ -327,7 +333,9 @@ el("tgList").addEventListener("click",async e=>{
     const when=len>1?`${fmt(u.from)} to ${fmt(u.to)}`:fmt(u.from,{weekday:"long"});
     await shareText(u.type==="full"?`We're all off ${when}! ✈️ Plans? Brunch, beach or a quick trip?`:`We're all free for part of ${when}. ✈️ Dinner or a coffee?`,"Off together"); }
 });
-el("tgInAdd").addEventListener("click",()=>{ const b=pending; closeIn(); if(b){ addBuddy(b); if(typeof showTab==="function") showTab("rest","together"); } });
+el("tgInAdd").addEventListener("click",()=>{ const b=pending; closeIn();
+  if(b&&locked()){ addBuddy(b,true); if(typeof showTab==="function") showTab("rest","together"); goPro(); return; } /* kept, ready once Pro is on */
+  if(b){ addBuddy(b); if(typeof showTab==="function") showTab("rest","together"); } });
 el("tgInNo").addEventListener("click",closeIn); el("tgInBg").addEventListener("click",closeIn);
 const tt=el("tgToday"); if(tt) tt.addEventListener("click",()=>{ if(typeof showTab==="function") showTab("rest","together"); });
 
@@ -335,6 +343,9 @@ const tt=el("tgToday"); if(tt) tt.addEventListener("click",()=>{ if(typeof showT
 window.addEventListener("storage",e=>{ if(e.key&&e.key.startsWith("lay.")) render(); });
 document.querySelector('#tab-rest .seg [data-sub="together"]').addEventListener("click",render);
 window.LayoverTogether={render,decode,encode,upcoming};
+/* Pro turned on or off: redraw */
+let wasLocked=locked();
+new MutationObserver(()=>{ if(locked()!==wasLocked){ wasLocked=locked(); render(); } }).observe(document.body,{attributes:true,attributeFilter:["class"]});
 
 render();
 /* show an incoming friend's roster once the app (and any sign-in) is on screen */
