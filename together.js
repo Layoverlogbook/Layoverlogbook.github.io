@@ -1,6 +1,8 @@
-/* Off together: crew share their rosters as day statuses and the app finds the days they are all free.
-   Only day statuses travel (off, part day, duty, away, standby, leave), never flights, routes or times.
-   Everything is kept on this device; a share is a link or a code sent through any chat app. */
+/* Off together: each crew member uploads their own roster; the app reads it and publishes only the
+   day types (off, part day, duty, away, standby, leave), never flights, routes or times.
+   Crew connect privately with a code: connected crew see each other's days, nobody else.
+   The app then finds the days everyone is off. Storage and access rules live in Supabase
+   (roster_shares, roster_links and the roster_* functions). */
 (()=>{
 "use strict";
 const el=id=>document.getElementById(id);
@@ -29,13 +31,23 @@ const todayK=()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMo
 const fmt=(k,o)=>dOf(k).toLocaleDateString("en-GB",Object.assign({weekday:"short",day:"numeric",month:"short",timeZone:"UTC"},o||{}));
 
 /* ---------- state ---------- */
-let me=ls.get("lay.tgMe",{name:"",manual:{}}); me.manual=me.manual||{};
-let buddies=ls.get("lay.tgBuddies",[]);
+let me=ls.get("lay.tgMe",{name:""});
+let friends=ls.get("lay.tgFriends",[]);       /* connected crew, cached from the cloud */
+let mine=ls.get("lay.tgMine",null);           /* my share: {code, friends, updated} */
+let example=ls.get("lay.tgExample",false);    /* demo friend, this device only */
 let pick=ls.get("lay.tgPick",null);           /* ids of friends to match against; null = everyone */
-let brush="O", month=todayK().slice(0,7), painting=false, pending=null;
-const save=()=>{ ls.set("lay.tgMe",me); ls.set("lay.tgBuddies",buddies); ls.set("lay.tgPick",pick); };
+let month=todayK().slice(0,7), pending=null, files=[], busy=false;
+const save=()=>{ ls.set("lay.tgMe",me); ls.set("lay.tgFriends",friends); ls.set("lay.tgMine",mine); ls.set("lay.tgExample",example); ls.set("lay.tgPick",pick); };
+ls.set("lay.tgBuddies",null);                 /* links from the first version are replaced by private connections */
 
-/* ---------- my days from Roster check ---------- */
+const EXAMPLE=(()=>{ /* a believable friend: two trips, a standby, lots of days off */
+  const t=todayK(), pat="DDAOOPOODDDAAOOOSOODOLLLOODDOOPOOOD", days={};
+  [...pat].forEach((c,i)=>days[addD(t,i-2)]=c);
+  return {id:"example",name:"Sara (example)",days,updated:t,color:COLORS[5]};
+})();
+const DEMO_ME=(()=>{ const t=todayK(), days={}; [..."OODDAOOODDAAAOOPOODDOOOLLOOODDDAOO"].forEach((c,i)=>days[addD(t,i-2)]=c); return days; })();
+
+/* ---------- my days, worked out from the roster ---------- */
 function rosterDays(){
   const roster=ls.get("lay.roster",[]); if(!Array.isArray(roster)||!roster.length) return {};
   const RC=window.RosterEngine, rid=ls.get("lay.rcRule","qatar"), cu=(ls.get("lay.rcCustom",{})||{})[rid]||{};
@@ -62,35 +74,96 @@ function rosterDays(){
   for(let k=first;k<=last;k=addD(k,1)) if(out[k]==null) out[k]="O";
   return out;
 }
-function myDays(){ return Object.assign(rosterDays(),me.manual||{}); }
+function myDays(){ const r=rosterDays(); return Object.keys(r).length||!example?r:DEMO_ME; }
 
-/* ---------- share codes ---------- */
-const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
-const b64d=s=>decodeURIComponent(escape(atob(s.replace(/-/g,"+").replace(/_/g,"/"))));
-function encode(){
-  const days=myDays(), t=todayK(), ks=Object.keys(days).filter(k=>k>=addD(t,-3)).sort();
+/* ---------- cloud ---------- */
+const cloudOn=()=>typeof CLOUD_ON!=="undefined"&&CLOUD_ON;
+const signedIn=()=>cloudOn()&&typeof DB!=="undefined"&&!!DB.cloud;
+const ERR={signin:"Sign in again to continue.",bad_code:"That code didn't work. Check it with your friend, or ask for a new one.",
+  own_code:"That's your own code. Send it to a friend instead.",too_many:"Too many tries. Wait an hour and try again.",
+  too_many_friends:"You're connected with 30 crew already. Disconnect someone first.",pro:"Seeing friends' days is part of Pro.",
+  bad_days:"Couldn't share that roster. Read it again.",bad_start:"That roster is too old to share. Upload this month's roster."};
+async function call(fn,args){
+  try{ return await rpc(fn,args); }
+  catch(e){ throw new Error(ERR[e.message]||e.message||"Something went wrong. Try again."); }
+}
+const toFriend=(f,i)=>{ const days={}; [...(f.days||"")].forEach((c,j)=>{ if(c!=="-") days[addD(f.start,j)]=c; });
+  return {id:f.id,name:f.name,days,updated:String(f.updated||"").slice(0,10)||todayK(),color:COLORS[i%COLORS.length]}; };
+function shareDays(){
+  const days=rosterDays(), t=todayK(), ks=Object.keys(days).filter(k=>k>=addD(t,-3)).sort();
   if(!ks.length) return null;
-  const s=ks[0], n=Math.min(MAXDAYS,diffD(s,ks[ks.length-1])+1);
-  let d=""; for(let i=0;i<n;i++) d+=days[addD(s,i)]||"-";
-  d=d.replace(/-+$/,"");
-  return b64e(JSON.stringify({v:1,n:(me.name||"Crew").slice(0,24),s,d,u:t}));
+  const start=ks[0], n=Math.min(MAXDAYS,diffD(start,ks[ks.length-1])+1);
+  let d=""; for(let i=0;i<n;i++) d+=days[addD(start,i)]||"-";
+  return {start,days:d.replace(/-+$/,"")};
 }
-function decode(text){
-  if(!text) return null;
-  let t=String(text).trim(), m=t.match(/together=([A-Za-z0-9_\-]+)/);
-  if(m) t=m[1]; else { const w=t.split(/\s+/).filter(x=>/^[A-Za-z0-9_\-]{20,}$/.test(x)); if(w.length) t=w[w.length-1]; }
+/* publish my days whenever the roster or my name changed */
+async function publish(force){
+  if(!signedIn()) return;
+  const sh=shareDays(); if(!sh) return;
+  const name=(me.name||"").trim()||"Crew", sig=[name,sh.start,sh.days].join("|");
+  if(!force&&sig===ls.get("lay.tgPubSig",null)&&mine&&mine.code) return;
   try{
-    const o=JSON.parse(b64d(t));
-    if(!o||o.v!==1||!/^\d{4}-\d{2}-\d{2}$/.test(o.s)||typeof o.d!=="string"||!/^[ODAPSL\-]*$/.test(o.d)||o.d.length>400) return null;
-    const days={}; [...o.d].forEach((c,i)=>{ if(c!=="-") days[addD(o.s,i)]=c; });
-    return {name:String(o.n||"Crew").replace(/[\u0000-\u001f<>]/g,"").slice(0,24).trim()||"Crew",days,updated:/^\d{4}-\d{2}-\d{2}$/.test(o.u||"")?o.u:todayK()};
-  }catch(e){ return null; }
+    const code=await call("roster_publish",{p_name:name,p_start:sh.start,p_days:sh.days});
+    ls.set("lay.tgPubSig",sig); mine={...(mine||{}),code,updated:todayK()}; save(); render();
+  }catch(e){ msg(e.message); }
 }
-const linkFor=code=>location.origin+location.pathname+"#together="+code;
+let pubTimer=0; const publishSoon=()=>{ clearTimeout(pubTimer); pubTimer=setTimeout(()=>publish(),900); };
+async function refresh(){
+  if(!signedIn()) return;
+  el("tgSync").textContent="Updating…";
+  try{
+    mine=(await call("roster_mine",{}))||null;
+    if(!locked()){ const fr=await call("roster_friends",{}); friends=(fr||[]).map(toFriend); }
+    save(); await publish(); render();
+  }catch(e){}
+  el("tgSync").textContent=friends.length?`${friends.length} connected`:"";
+}
+
+/* ---------- reading a roster picture (same reader as Roster check, Pro) ---------- */
+async function shrink(file){
+  const bmp=await createImageBitmap(file); const k=Math.min(1,2000/Math.max(bmp.width,bmp.height));
+  const c=document.createElement("canvas"); c.width=Math.round(bmp.width*k); c.height=Math.round(bmp.height*k);
+  c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
+  const url=c.toDataURL("image/jpeg",.85); return {type:"image/jpeg",data:url.slice(url.indexOf(",")+1)};
+}
+function rules(){
+  if(window.RosterCheck&&RosterCheck.rules) return RosterCheck.rules();
+  const RC=window.RosterEngine, rid=ls.get("lay.rcRule","qatar");
+  return {...(RC?RC.RULESETS[rid]:{}),...((ls.get("lay.rcCustom",{})||{})[rid]||{})};
+}
+function msg(t,spin){ el("tgMsg").innerHTML=(spin?'<span class="rc-spin"></span>':"")+esc(t||""); }
+function signIn(){ if(typeof openAccountScreen==="function") openAccountScreen("signin"); }
+async function readRoster(){
+  if(locked()){ goPro(); return; }
+  if(!signedIn()){ signIn(); return; }
+  if(!files.length||busy) return;
+  busy=true; const btn=el("tgRead"); btn.disabled=true; msg("Reading your roster… this can take up to a minute.",true);
+  try{
+    let tok; try{ tok=await validToken(); }catch(e){ tok=null; }
+    if(!tok){ msg("Sign in again to continue."); return; }
+    const R=rules(), images=await Promise.all(files.map(shrink));
+    let r; try{ r=await fetch(SB+"/functions/v1/roster-read",{method:"POST",headers:{apikey:SBKEY,Authorization:"Bearer "+tok,"Content-Type":"application/json"},
+      body:JSON.stringify({images,airline:R.name,homeBase:R.homeBase,homeOffset:R.homeOffset,month:el("tgMonth").value,timeBasis:"auto"})}); }
+    catch(e){ msg("You're offline. Try again when you have a connection."); return; }
+    let j=null; try{ j=await r.json(); }catch(e){}
+    if(r.status===402){ msg("Reading rosters is part of Pro."); goPro(); return; }
+    if(r.status===401){ msg("Sign in again to continue."); return; }
+    if(r.status===503){ msg("Reading roster pictures isn't switched on yet. The app owner needs to add the reading key."); return; }
+    if(!r.ok||!j||!Array.isArray(j.duties)){ msg("Couldn't read that roster. Try a clearer screenshot."); return; }
+    if(!j.duties.length){ msg("No duties found in that picture. Check it's your roster and try again."); return; }
+    ls.set("lay.roster",j.duties); if(window.RosterCheck) RosterCheck.reload();
+    example=false; save(); files=[]; el("tgThumbs").innerHTML=""; el("tgDrop").classList.remove("has");
+    const sh=shareDays(); if(sh) month=sh.start.slice(0,7);
+    render(); await publish(true);
+    msg(`Read ${j.duties.length} duties and shared your days with your crew friends.`);
+  }catch(e){ msg("Couldn't read that roster. Try a clearer screenshot."); }
+  finally{ busy=false; btn.disabled=!files.length; }
+}
 
 /* ---------- matching ---------- */
+const buddies=()=>example?[...friends,EXAMPLE]:friends;
 function people(){
-  const sel=buddies.filter(b=>!pick||pick.includes(b.id));
+  const sel=buddies().filter(b=>!pick||pick.includes(b.id));
   return [{id:"me",name:"You",color:"var(--accent)",days:myDays()},...sel];
 }
 function jointOn(k,ps){
@@ -138,30 +211,36 @@ function renderMe(){
   document.querySelectorAll(".tgMonthLbl").forEach(x=>x.textContent=label);
   let h=DOW; for(let i=0;i<lead;i++) h+=`<div></div>`;
   for(let d=1;d<=n;d++){
-    const k=`${month}-${String(d).padStart(2,"0")}`, c=days[k], man=me.manual&&me.manual[k]!=null&&me.manual[k]!==rd[k];
-    h+=`<button type="button" class="tg-cell${c?" c-"+c:""}${k<t?" past":""}${k===t?" now":""}" data-k="${k}" aria-label="${fmt(k)}: ${c?CODES[c].l:"not set"}"><span class="n">${d}</span>${c?`<span class="st">${CODES[c].s}</span>`:""}${man?`<i class="man" title="Changed by hand"></i>`:""}</button>`;
+    const k=`${month}-${String(d).padStart(2,"0")}`, c=days[k];
+    h+=`<div class="tg-cell${c?" c-"+c:""}${k<t?" past":""}${k===t?" now":""}" role="gridcell" aria-label="${fmt(k)}: ${c?CODES[c].l:"no roster"}"><span class="n">${d}</span>${c?`<span class="st">${CODES[c].s}</span>`:""}</div>`;
   }
   el("tgMeCal").innerHTML=h;
-  const rk=Object.keys(rd).length, mk=Object.keys(me.manual||{}).length, all=Object.keys(days).filter(k=>k>=t);
-  el("tgMeSrc").textContent=rk?`From your roster${mk?` · ${mk} changed by hand`:""}`:mk?`${mk} days marked by hand`:"Tap days to mark them";
-  el("tgMeOff").textContent=all.length?`${all.filter(k=>FREE(days[k])).length} days off ahead`:"";
-  el("tgClearHand").hidden=!mk;
-  el("tgShare").disabled=!all.length;
-  el("tgName").value=me.name||"";
+  const has=Object.keys(rd).length, ahead=Object.keys(days).filter(k=>k>=t);
+  el("tgMeSrc").textContent=has?(mine&&mine.code?"Shared privately":"From your roster"):example?"Example days":"No roster yet";
+  el("tgMeOff").textContent=ahead.length?`${ahead.filter(k=>FREE(days[k])).length} days off ahead`:"";
+  if(document.activeElement!==el("tgName")) el("tgName").value=me.name||"";
+  el("tgSignIn").hidden=signedIn();
+  if(!cloudOn()){ el("tgSignIn").querySelector("p").textContent="Sharing rosters needs the online app at layoverlogbook.github.io."; el("tgSignBtn").hidden=true; }
+  el("tgRead").disabled=!files.length||busy;
 }
-
+function renderShare(){
+  const code=mine&&mine.code;
+  el("tgCodeBox").hidden=!code||!signedIn();
+  if(code) el("tgCode").textContent=code;
+}
 function renderCrew(){
-  const ul=el("tgCrewList");
-  ul.innerHTML=buddies.length?buddies.map((b,i)=>{
-    const nx=pairNext(b), ks=Object.keys(b.days).sort();
-    const range=ks.length?`${fmt(ks[0],{weekday:undefined})} – ${fmt(ks[ks.length-1],{weekday:undefined})}`:"No days";
+  const bs=buddies();
+  renderShare();
+  el("tgCrewList").innerHTML=bs.length?bs.map(b=>{
+    const nx=pairNext(b), ex=b.id==="example";
     return `<li class="tg-friend" style="--pc:${b.color}"><span class="tg-av" aria-hidden="true">${esc((b.name[0]||"?").toUpperCase())}</span>
-      <div class="tg-fi"><b>${esc(b.name)}</b><span class="hint">${range} · shared ${fmt(b.updated,{weekday:undefined})}</span>
+      <div class="tg-fi"><b>${esc(b.name)}</b><span class="hint">${ex?"Example, only on this device":`Roster updated ${fmt(b.updated,{weekday:undefined})}`}</span>
       ${nx?`<span class="tg-next ${nx.type}">${nx.type==="full"?"Next day off together":"Next part day together"}: <b>${fmt(nx.from)}</b></span>`:`<span class="hint">No days off together yet</span>`}</div>
-      <div class="tg-fa"><button class="btn ghost rc-sm" type="button" data-send="${i}">Send mine</button><button class="x" type="button" data-del="${i}" aria-label="Remove ${esc(b.name)}">×</button></div></li>`;
-  }).join(""):`<li class="tg-emptyrow"><span class="hint">No crew friends yet. Paste a link or code a friend sent you, or see an example.</span></li>`;
-  el("tgPicks").innerHTML=buddies.length>1?buddies.map(b=>`<button class="chip tg-pick" type="button" data-id="${esc(b.id)}" aria-pressed="${!pick||pick.includes(b.id)}" style="--pc:${b.color}">${esc(b.name)}</button>`).join(""):"";
-  el("tgPicks").hidden=buddies.length<2;
+      <div class="tg-fa"><button class="btn ghost rc-sm" type="button" data-del="${esc(b.id)}" aria-label="${ex?"Remove":"Disconnect from"} ${esc(b.name)}">${ex?"Remove":"Disconnect"}</button></div></li>`;
+  }).join(""):`<li class="tg-emptyrow"><span class="hint">${!signedIn()?"Sign in to connect with crew friends.":mine&&mine.code?"No crew connected yet. Send your code, or enter a friend's code below.":"Upload your roster to get your private code. Or enter a friend's code below."}</span></li>`;
+  el("tgPicks").innerHTML=bs.length>1?bs.map(b=>`<button class="chip tg-pick" type="button" data-id="${esc(b.id)}" aria-pressed="${!pick||pick.includes(b.id)}" style="--pc:${b.color}">${esc(b.name)}</button>`).join(""):"";
+  el("tgPicks").hidden=bs.length<2;
+  el("tgExample").hidden=example;
 }
 
 function renderMatch(){
@@ -179,8 +258,8 @@ function renderMatch(){
   el("tgMonthSum").textContent=ps.length<2?"":`${fullN} full ${fullN===1?"day":"days"}${partN?` · ${partN} part ${partN===1?"day":"days"}`:""} still to come this month`;
 
   const up=upcoming(ps,12), list=el("tgList");
-  if(ps.length<2) list.innerHTML=`<li class="tg-emptyrow"><span class="hint">Add a crew friend to see your days off together.</span></li>`;
-  else if(!up.length) list.innerHTML=`<li class="tg-emptyrow"><span class="hint">No shared free days in the days you both shared. Ask for a newer roster, or swap a duty.</span></li>`;
+  if(ps.length<2) list.innerHTML=`<li class="tg-emptyrow"><span class="hint">Connect with a crew friend to see your days off together.</span></li>`;
+  else if(!up.length) list.innerHTML=`<li class="tg-emptyrow"><span class="hint">No free days together in the rosters you both shared. Next month's rosters may line up, or swap a duty.</span></li>`;
   else list.innerHTML=up.slice(0,10).map((u,i)=>{
     const len=diffD(u.from,u.to)+1, d=dOf(u.from);
     const when=len>1?`${fmt(u.from)} – ${fmt(u.to)}`:fmt(u.from,{weekday:"long"});
@@ -197,10 +276,10 @@ function renderHero(ps,up){
   const nx=up.find(u=>u.type==="full")||up[0];
   const who=ps.slice(1).map(p=>p.name);
   const whoTxt=who.length>2?`${who.slice(0,-1).join(", ")} and ${who[who.length-1]}`:who.join(" and ");
-  const mine=Object.keys(ps[0].days).some(k=>k>=todayK());
-  if(locked()){ flap("tgFlap","GO PRO"); el("tgHeroLine").textContent=buddies.length?`Unlock Pro to see your days off with ${whoTxt||"your crew"}.`:"Find every day you and your crew friends are off together."; }
-  else if(!mine){ flap("tgFlap","YOUR DAYS"); el("tgHeroLine").textContent="Load your roster in Roster check, or mark your days off below."; }
-  else if(ps.length<2){ flap("tgFlap","ADD CREW"); el("tgHeroLine").textContent="Share your days. Find the ones you're all off."; }
+  const mineAhead=Object.keys(ps[0].days).some(k=>k>=todayK()), n=buddies().length;
+  if(locked()){ flap("tgFlap","GO PRO"); el("tgHeroLine").textContent=n?`Unlock Pro to see your days off with ${whoTxt||"your crew"}.`:"Find every day you and your crew friends are off together."; }
+  else if(!mineAhead){ flap("tgFlap","ROSTER"); el("tgHeroLine").textContent="Upload your roster. Your crew friends upload theirs. The app finds your days off together."; }
+  else if(ps.length<2){ flap("tgFlap","ADD CREW"); el("tgHeroLine").textContent="Send your private code to a crew friend to compare rosters."; }
   else if(!nx){ flap("tgFlap","NO MATCH"); el("tgHeroLine").textContent=`Nothing yet with ${whoTxt}.`; }
   else {
     const d=dOf(nx.from), s=(d.toLocaleDateString("en-GB",{weekday:"short",timeZone:"UTC"})+" "+String(d.getUTCDate()).padStart(2,"0")+" "+d.toLocaleDateString("en-GB",{month:"short",timeZone:"UTC"})).toUpperCase();
@@ -210,11 +289,11 @@ function renderHero(ps,up){
   }
   el("tgKick").textContent=locked()?"Off together · Pro":nx&&nx.from===todayK()?"Off together today":"Next day off together";
   /* Today teaser */
-  const tc=el("tgToday"); if(!tc) return;
-  if(locked()){ el("tgTodayT").textContent=buddies.length?"Days off together":"Off together"; el("tgTodayL").textContent=buddies.length?`See your days off with ${whoTxt}. Unlock with Pro.`:"Share rosters with crew friends and see which days you're all off."; }
-  else if(!buddies.length){ el("tgTodayT").textContent="Off together"; el("tgTodayL").textContent="Share rosters with crew friends and see which days you're all off."; }
+  if(!el("tgToday")) return;
+  if(locked()){ el("tgTodayT").textContent=n?"Days off together":"Off together"; el("tgTodayL").textContent=n?`See your days off with ${whoTxt}. Unlock with Pro.`:"Upload rosters with crew friends and see which days you're all off."; }
+  else if(!n){ el("tgTodayT").textContent="Off together"; el("tgTodayL").textContent="Upload rosters with crew friends and see which days you're all off."; }
   else if(nx){ el("tgTodayT").textContent=fmt(nx.from,{weekday:"long"}); el("tgTodayL").textContent=`${nx.type==="full"?"Your next day off":"Part day free"} with ${whoTxt}`; }
-  else { el("tgTodayT").textContent="No match yet"; el("tgTodayL").textContent=`Ask ${whoTxt} for a newer roster.`; }
+  else { el("tgTodayT").textContent="No match yet"; el("tgTodayL").textContent=`No days off together with ${whoTxt} in these rosters.`; }
 }
 
 function render(){ renderMe(); renderCrew(); renderMatch(); }
@@ -225,20 +304,17 @@ async function shareText(text,title){
   try{ await navigator.clipboard.writeText(text); say("Copied. Paste it in your crew chat."); return "copied"; }
   catch(e){ window.prompt("Copy this and send it:",text); return "prompt"; }
 }
-async function shareMine(){
-  if(locked()){ goPro(); return; }
-  if(!me.name){ el("tgName").focus(); el("tgNameMsg").textContent="Add the name your friends know you by first."; return; }
-  const code=encode(); if(!code){ say("Mark some days first."); return; }
-  el("tgCode").value=linkFor(code); el("tgCodeBox").hidden=false;
-  await shareText(`${me.name} shared their roster days off on Layover Logbook. Open to see our days off together: ${linkFor(code)}`,"My days off");
+async function sendCode(){
+  if(!mine||!mine.code) return;
+  await shareText(`Let's find our days off together on Layover Logbook ✈️ Connect with my private code ${mine.code}: ${location.origin+location.pathname}#together=${mine.code}`,"Off together");
 }
-function addBuddy(b,quiet){
-  const id=b.name.toLowerCase().replace(/\s+/g," ");
-  const i=buddies.findIndex(x=>x.id===id);
-  if(i>=0){ buddies[i]={...buddies[i],days:b.days,updated:b.updated}; if(!quiet) say(`Updated ${b.name}'s days.`); }
-  else { buddies.push({id,name:b.name,days:b.days,updated:b.updated,color:COLORS[buddies.length%COLORS.length]}); if(pick) pick.push(id); if(!quiet) say(`Added ${b.name}.`); }
-  save(); render();
+async function connect(code){
+  if(!signedIn()){ ls.set("lay.tgPending",code); signIn(); return false; }
+  const r=await call("roster_connect",{p_code:code});
+  say(`Connected with ${r&&r.name?r.name:"your crew friend"}. You can both see each other's days now.`);
+  await refresh(); return true;
 }
+const codeIn=t=>{ const v=String(t||"").toUpperCase(), m=v.match(/TOGETHER=([A-Z2-9]{10})\b/)||v.match(/\b([A-Z2-9]{10})\b/); return m?m[1]:null; };
 function icsFor(u){
   const z=k=>k.replace(/-/g,""), who=people().slice(1).map(p=>p.name).join(", ");
   return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Layover Logbook//Off together//EN","BEGIN:VEVENT",
@@ -250,76 +326,73 @@ function download(name,text){
   const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type:"text/calendar"})); a.download=name;
   document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
 }
-const EXAMPLE=(()=>{ /* a believable friend: two trips, a standby, lots of days off */
-  const t=todayK(), pat="DDAOOPOODDDAAOOOSOODOLLLOODDOOPOOOD", days={};
-  [...pat].forEach((c,i)=>days[addD(t,i-2)]=c);
-  return {name:"Sara (example)",days,updated:t};
-})();
 
-/* ---------- incoming links ---------- */
+/* ---------- incoming links: #together=CODE ---------- */
 function takeHash(){
   const m=location.hash.match(/together=([A-Za-z0-9_\-]+)/); if(!m) return;
-  ls.set("lay.tgPending",m[1]);
   history.replaceState(null,"",location.pathname+location.search);
+  const c=codeIn("together="+m[1]); if(c) ls.set("lay.tgPending",c); else setTimeout(()=>say("That link is from an older version of the app. Ask your friend for their private code."),1500);
 }
 function offerPending(){
-  const code=ls.get("lay.tgPending",null); if(!code) return;
-  const b=decode(code); ls.set("lay.tgPending",null); if(!b) { say("That roster link didn't work. Ask for a new one."); return; }
-  pending=b;
-  const ks=Object.keys(b.days), off=ks.filter(k=>FREE(b.days[k])&&k>=todayK()).length;
-  const tog=upcoming([{days:myDays()},b],60).filter(u=>u.type==="full").reduce((s,u)=>s+diffD(u.from,u.to)+1,0);
-  el("tgInTitle").textContent=`${b.name} shared their days off`;
-  el("tgInLine").textContent=`${ks.length} days · ${off} days off ahead`+(Object.keys(myDays()).length?` · ${tog} off together with you`:"");
-  el("tgInAdd").textContent=locked()?"Unlock with Pro to compare":"Add and compare";
+  const code=ls.get("lay.tgPending",null); if(!code||!el("tgIn").hidden) return;
+  pending=code; ls.set("lay.tgPending",null);
+  el("tgInTitle").textContent="Connect rosters?";
+  el("tgInLine").textContent=`A crew friend sent you their private code ${code}.`;
+  el("tgInMsg").textContent=""; el("tgInAdd").disabled=false;
+  el("tgInAdd").textContent=signedIn()?"Connect":"Sign in to connect";
   el("tgIn").hidden=false; el("tgInBg").hidden=false;
 }
 function closeIn(){ el("tgIn").hidden=true; el("tgInBg").hidden=true; pending=null; }
 takeHash();
 
 /* ---------- wiring ---------- */
-function paint(btn){
-  const k=btn.dataset.k; if(!k) return;
-  me.manual=me.manual||{};
-  const rd=rosterDays();
-  if(brush==="clear") delete me.manual[k]; else if(rd[k]===brush) delete me.manual[k]; else me.manual[k]=brush;
-  save(); renderMe(); renderCrew(); renderMatch();
-}
 function shift(n){ const [y,m]=month.split("-").map(Number); month=new Date(Date.UTC(y,m-1+n,1)).toISOString().slice(0,7); render(); }
-
-el("tgBrush").addEventListener("click",e=>{ const b=e.target.closest("[data-b]"); if(!b) return; brush=b.dataset.b;
-  el("tgBrush").querySelectorAll("[data-b]").forEach(x=>x.setAttribute("aria-pressed",x===b)); });
-const cal=el("tgMeCal");
-cal.addEventListener("pointerdown",e=>{ const b=e.target.closest("[data-k]"); if(!b) return; painting=e.pointerType==="mouse"; paint(b); e.preventDefault(); });
-cal.addEventListener("pointerover",e=>{ if(!painting) return; const b=e.target.closest("[data-k]"); if(b) paint(b); });
-window.addEventListener("pointerup",()=>painting=false);
-cal.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ const b=e.target.closest("[data-k]"); if(b){ e.preventDefault(); paint(b); } } });
+const arm=(b,ask,label,ms)=>{ if(b.classList.contains("armed")){ b.classList.remove("armed"); b.textContent=label; return true; }
+  b.classList.add("armed"); b.textContent=ask; setTimeout(()=>{ if(b.classList.contains("armed")){ b.classList.remove("armed"); b.textContent=label; } },ms||3500); return false; };
 document.querySelectorAll(".tgPrev").forEach(b=>b.addEventListener("click",()=>shift(-1)));
 document.querySelectorAll(".tgNext").forEach(b=>b.addEventListener("click",()=>shift(1)));
-el("tgName").addEventListener("input",e=>{ me.name=e.target.value.trim().slice(0,24); el("tgNameMsg").textContent=""; save(); });
-el("tgShare").addEventListener("click",shareMine);
-el("tgCopy").addEventListener("click",async()=>{ try{ await navigator.clipboard.writeText(el("tgCode").value); say("Link copied."); }catch(e){ el("tgCode").select(); } });
-el("tgClearHand").addEventListener("click",()=>{ me.manual={}; save(); render(); });
-el("tgAddForm").addEventListener("submit",e=>{
-  e.preventDefault(); const v=el("tgPaste").value, b=decode(v);
-  if(!b){ el("tgAddMsg").textContent="That doesn't look like a roster link or code. Ask your friend to send it again."; return; }
-  el("tgAddMsg").textContent=""; el("tgPaste").value=""; addBuddy(b);
+(()=>{ const n=new Date(); el("tgMonth").value=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}`; })();
+el("tgName").addEventListener("input",e=>{ me.name=e.target.value.trim().slice(0,24); save(); publishSoon(); });
+el("tgDrop").addEventListener("click",()=>{ if(locked()) goPro(); else if(!signedIn()) signIn(); else el("tgFile").click(); });
+el("tgFile").addEventListener("change",e=>{
+  files=[...e.target.files].slice(0,4);
+  el("tgThumbs").innerHTML=files.map(f=>`<img src="${URL.createObjectURL(f)}" alt="Roster page">`).join("");
+  el("tgDrop").classList.toggle("has",files.length>0); el("tgRead").disabled=!files.length; e.target.value="";
+});
+el("tgRead").addEventListener("click",readRoster);
+el("tgSignBtn").addEventListener("click",signIn);
+el("tgSend").addEventListener("click",sendCode);
+el("tgNewCode").addEventListener("click",async e=>{
+  if(!arm(e.currentTarget,"Change code?","New code")) return;
+  try{ const c=await call("roster_new_code",{}); mine={...(mine||{}),code:c}; save(); renderShare(); say("New code ready. Crew already connected stay connected."); }catch(err){ say(err.message); }
+});
+el("tgStop").addEventListener("click",async e=>{
+  if(!arm(e.currentTarget,"Stop and disconnect all?","Stop sharing")) return;
+  try{ await call("roster_unpublish",{}); mine=null; friends=[]; ls.set("lay.tgPubSig",null); save(); render(); say("Your roster is no longer shared."); }catch(err){ say(err.message); }
+});
+el("tgAddForm").addEventListener("submit",async e=>{
+  e.preventDefault(); const c=codeIn(el("tgPaste").value);
+  if(!c){ el("tgAddMsg").textContent="A code has 10 letters and numbers, like K7QM2XPD4A."; return; }
+  el("tgAddMsg").textContent="Connecting…";
+  try{ const ok=await connect(c); el("tgAddMsg").textContent=""; if(ok) el("tgPaste").value=""; }
+  catch(err){ el("tgAddMsg").textContent=err.message; }
 });
 el("tgExample").addEventListener("click",()=>{
-  if(!Object.keys(myDays()).some(k=>k>=todayK())){ /* nothing of mine yet: give me example days too, so the match shows */
-    const t=todayK(); [..."OODDAOOODDAAAOOPOODDOOOLLOOODDDAOO"].forEach((c,i)=>me.manual[addD(t,i-2)]=c); save();
-    say("Added example days for you too. Change them in Your days.");
-  }
-  addBuddy(EXAMPLE,true); el("tgMatchCard").scrollIntoView({behavior:"smooth",block:"start"}); });
-el("tgCrewList").addEventListener("click",e=>{
-  const d=e.target.closest("[data-del]"), s=e.target.closest("[data-send]");
-  if(d){ const i=+d.dataset.del;
-    if(!d.classList.contains("armed")){ d.classList.add("armed"); d.textContent="Remove"; setTimeout(()=>{ if(d.isConnected){ d.classList.remove("armed"); d.textContent="×"; } },3000); return; }
-    const id=buddies[i].id; buddies.splice(i,1); if(pick) pick=pick.filter(x=>x!==id); save(); render(); }
-  if(s) shareMine();
+  example=true; save(); render();
+  if(!Object.keys(rosterDays()).length) say("Showing example days for you too, until you upload your roster.");
+  el("tgMatchCard").scrollIntoView({behavior:"smooth",block:"start"});
+});
+el("tgCrewList").addEventListener("click",async e=>{
+  const d=e.target.closest("[data-del]"); if(!d) return;
+  const id=d.dataset.del;
+  if(id==="example"){ example=false; if(pick) pick=pick.filter(x=>x!==id); save(); render(); return; }
+  if(!arm(d,"Sure?","Disconnect")) return;
+  try{ await call("roster_disconnect",{p_friend:id}); friends=friends.filter(f=>f.id!==id); if(pick) pick=pick.filter(x=>x!==id); save(); render(); say("Disconnected. You no longer see each other's days."); }
+  catch(err){ say(err.message); }
 });
 el("tgPicks").addEventListener("click",e=>{
   const b=e.target.closest("[data-id]"); if(!b) return;
-  const all=buddies.map(x=>x.id); let p=pick?[...pick]:[...all];
+  const all=buddies().map(x=>x.id); let p=pick?[...pick]:[...all];
   p=p.includes(b.dataset.id)?p.filter(x=>x!==b.dataset.id):[...p,b.dataset.id];
   if(!p.length) p=[b.dataset.id];
   pick=p.length===all.length?null:p; save(); renderCrew(); renderMatch();
@@ -333,26 +406,31 @@ el("tgList").addEventListener("click",async e=>{
     const when=len>1?`${fmt(u.from)} to ${fmt(u.to)}`:fmt(u.from,{weekday:"long"});
     await shareText(u.type==="full"?`We're all off ${when}! ✈️ Plans? Brunch, beach or a quick trip?`:`We're all free for part of ${when}. ✈️ Dinner or a coffee?`,"Off together"); }
 });
-el("tgInAdd").addEventListener("click",()=>{ const b=pending; closeIn();
-  if(b&&locked()){ addBuddy(b,true); if(typeof showTab==="function") showTab("rest","together"); goPro(); return; } /* kept, ready once Pro is on */
-  if(b){ addBuddy(b); if(typeof showTab==="function") showTab("rest","together"); } });
+el("tgInAdd").addEventListener("click",async()=>{
+  const c=pending; if(!c) return;
+  if(!signedIn()){ ls.set("lay.tgPending",c); closeIn(); signIn(); return; }
+  el("tgInAdd").disabled=true; el("tgInMsg").textContent="Connecting…";
+  try{ await connect(c); closeIn(); if(typeof showTab==="function") showTab("rest","together"); if(locked()) goPro(); }
+  catch(err){ el("tgInMsg").textContent=err.message; el("tgInAdd").disabled=false; }
+});
 el("tgInNo").addEventListener("click",closeIn); el("tgInBg").addEventListener("click",closeIn);
 const tt=el("tgToday"); if(tt) tt.addEventListener("click",()=>{ if(typeof showTab==="function") showTab("rest","together"); });
 
-/* Roster check changes my days: refresh when it saves, or when this page is shown */
+/* my roster changed in Roster check: redraw and share the new days */
+window.addEventListener("lay-roster",()=>{ render(); publishSoon(); });
 window.addEventListener("storage",e=>{ if(e.key&&e.key.startsWith("lay.")) render(); });
-document.querySelector('#tab-rest .seg [data-sub="together"]').addEventListener("click",render);
-window.LayoverTogether={render,decode,encode,upcoming};
-/* Pro turned on or off: redraw */
-let wasLocked=locked();
-new MutationObserver(()=>{ if(locked()!==wasLocked){ wasLocked=locked(); render(); } }).observe(document.body,{attributes:true,attributeFilter:["class"]});
+document.querySelector('#tab-rest .seg [data-sub="together"]').addEventListener("click",()=>{ render(); refresh(); });
+window.LayoverTogether={render,refresh,upcoming,shareDays,rosterDays};
+let wasLocked=locked(), wasIn=null;
+new MutationObserver(()=>{ if(locked()!==wasLocked){ wasLocked=locked(); render(); refresh(); } }).observe(document.body,{attributes:true,attributeFilter:["class"]});
 
 render();
-/* show an incoming friend's roster once the app (and any sign-in) is on screen */
-const wait=setInterval(()=>{
+/* once the app (and any sign-in) is on screen: load connections, then offer a pending code */
+setInterval(()=>{
   const login=el("login"), home=el("homeForm");
-  if((!login||login.hidden)&&(!home||home.hidden)&&ls.get("lay.tgPending",null)){ clearInterval(wait); setTimeout(offerPending,300); }
-  else if(!ls.get("lay.tgPending",null)) clearInterval(wait);
-},700);
+  if((login&&!login.hidden)||(home&&!home.hidden)) return;
+  if(signedIn()!==wasIn){ wasIn=signedIn(); render(); refresh(); }
+  if(ls.get("lay.tgPending",null)) offerPending();
+},800);
 window.addEventListener("hashchange",()=>{ takeHash(); offerPending(); });
 })();
