@@ -216,6 +216,8 @@ function renderMe(){
   }
   el("tgMeCal").innerHTML=h;
   const has=Object.keys(rd).length, ahead=Object.keys(days).filter(k=>k>=t);
+  el("tgMeWrap").hidden=!Object.keys(days).length;            /* no roster yet: no empty calendar */
+  el("tgPanel").classList.toggle("setup",!has&&!example);       /* setup card first until there is a roster */
   el("tgMeSrc").textContent=has?(mine&&mine.code?"Shared privately":"From your roster"):example?"Example days":"No roster yet";
   el("tgMeOff").textContent=ahead.length?`${ahead.filter(k=>FREE(days[k])).length} days off ahead`:"";
   if(document.activeElement!==el("tgName")) el("tgName").value=me.name||"";
@@ -254,6 +256,7 @@ function renderMatch(){
     h+=`<div class="tg-cell m${j?" j-"+j:""}${k<t?" past":""}${k===t?" now":""}" role="gridcell" aria-label="${fmt(k)}${j==="full"?": everyone off":j==="part"?": everyone free part of the day":""}"><span class="n">${d}</span>${j==="full"?`<span class="spark" aria-hidden="true">✦</span>`:""}<span class="bars">${bars}</span></div>`;
   }
   el("tgMatchCal").innerHTML=h;
+  el("tgMatchWrap").hidden=ps.length<2||!Object.keys(ps[0].days).length;
   el("tgLegend").innerHTML=ps.map(p=>`<span style="--c:${p.color}">${esc(p.name)}</span>`).join("");
   el("tgMonthSum").textContent=ps.length<2?"":`${fullN} full ${fullN===1?"day":"days"}${partN?` · ${partN} part ${partN===1?"day":"days"}`:""} still to come this month`;
 
