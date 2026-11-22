@@ -1205,6 +1205,19 @@ main .guesthero .hint{color:#D9E2EE}
 .pro-plan .pro-on-txt{display:none}
 body:not(.locked) .pro-plan .pro-on-txt{display:block}
 body:not(.locked) .pro-plan .pro-off-txt{display:none}
+
+/* Off together layout: one column on phones, setup first until there is a roster */
+.tg-fields{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+@media (min-width:520px){.tg-fields{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.tg-fields input{width:100%;min-width:0;max-width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none;min-height:48px;text-align:left;display:block}
+.tg-fields input::-webkit-date-and-time-value{text-align:left;margin:0}
+.tg-calwrap{display:grid;gap:12px;min-width:0}
+.tg-calwrap[hidden]{display:none!important}
+#tgPanel{display:grid}
+#tgPanel.setup #tgRosterCard{order:-1}
+#tgPanel.setup .tg-hero{order:-2}
+#tgPanel .rc-calhead .label:first-child{flex:1 1 140px}
+#tgPanel .rc-calhead{flex-wrap:wrap;row-gap:8px}
 /* incoming share */
 .tg-in{text-align:left}
 .tg-in-art{height:90px;position:relative;perspective:400px}
@@ -1247,7 +1260,7 @@ body:not(.locked) .pro-plan .pro-off-txt{display:none}
 
 <div class="appbar">
   <div class="wrap">
-    <div class="brand">Layover <b>Logbook</b> <span class="ver">v6.3</span></div>
+    <div class="brand">Layover <b>Logbook</b> <span class="ver">v6.4</span></div>
     <div class="barright">
     <button class="avatar" type="button" id="acctBtn" hidden aria-label="Your account"></button>
     <button class="joinbtn" type="button" id="joinBtn" hidden>Sign up</button>
@@ -1838,9 +1851,11 @@ body:not(.locked) .pro-plan .pro-off-txt{display:none}
     <div class="card" id="tgMatchCard" data-pro>
       <div class="cardhead"><h2>Off together</h2><span class="hint" id="tgMonthSum"></span></div>
       <div class="chips" id="tgPicks" aria-label="Match with" hidden></div>
+      <div class="tg-calwrap" id="tgMatchWrap">
       <div class="rc-calhead"><span class="label">Everyone free <b class="tg-key full">✦</b> · part of the day <b class="tg-key part"></b></span><div class="row"><button class="btn ghost rc-sm tgPrev" type="button" aria-label="Previous month">‹</button><span class="label tgMonthLbl" style="min-width:104px;text-align:center"></span><button class="btn ghost rc-sm tgNext" type="button" aria-label="Next month">›</button></div></div>
       <div class="tg-cal" id="tgMatchCal" role="grid"></div>
       <div class="legend" id="tgLegend"></div>
+      </div>
       <ul class="list tg-hits" id="tgList"></ul>
     </div>
 
@@ -1852,15 +1867,17 @@ body:not(.locked) .pro-plan .pro-off-txt{display:none}
       </div>
       <button type="button" class="rc-drop" id="tgDrop"><b>Upload your roster</b>Screenshots of your monthly roster, up to 4 pictures<div class="rc-thumbs" id="tgThumbs"></div></button>
       <input type="file" id="tgFile" accept="image/*" multiple hidden>
-      <div class="rc-grid2">
-        <label class="field"><span class="label">Roster month</span><input type="month" id="tgMonth"></label>
+      <div class="tg-fields">
         <label class="field"><span class="label">Your name, as crew friends know you</span><input id="tgName" maxlength="24" placeholder="e.g. Sam" autocomplete="nickname"></label>
+        <label class="field"><span class="label">Roster month</span><input type="month" id="tgMonth"></label>
       </div>
       <div class="row"><button class="btn" type="button" id="tgRead" disabled>Read and share my roster</button></div>
       <p class="hint" id="tgMsg" role="status"></p>
+      <div class="tg-calwrap" id="tgMeWrap">
       <div class="rc-calhead"><span class="label" id="tgMeOff"></span><div class="row"><button class="btn ghost rc-sm tgPrev" type="button" aria-label="Previous month">‹</button><span class="label tgMonthLbl" style="min-width:104px;text-align:center"></span><button class="btn ghost rc-sm tgNext" type="button" aria-label="Next month">›</button></div></div>
       <div class="tg-cal" id="tgMeCal"></div>
       <p class="hint">Read from your roster. To fix a day, edit that duty in Roster check.</p>
+      </div>
       <p class="note">Only off, duty, away and leave are shared, and only with crew you connect with. No flights, routes, times or hotels.</p>
     </div>
 
