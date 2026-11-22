@@ -410,16 +410,16 @@ el("tgInAdd").addEventListener("click",async()=>{
   const c=pending; if(!c) return;
   if(!signedIn()){ ls.set("lay.tgPending",c); closeIn(); signIn(); return; }
   el("tgInAdd").disabled=true; el("tgInMsg").textContent="Connecting…";
-  try{ await connect(c); closeIn(); if(typeof showTab==="function") showTab("rest","together"); if(locked()) goPro(); }
+  try{ await connect(c); closeIn(); if(typeof showTab==="function") showTab("pro","together"); if(locked()) goPro(); }
   catch(err){ el("tgInMsg").textContent=err.message; el("tgInAdd").disabled=false; }
 });
 el("tgInNo").addEventListener("click",closeIn); el("tgInBg").addEventListener("click",closeIn);
-const tt=el("tgToday"); if(tt) tt.addEventListener("click",()=>{ if(typeof showTab==="function") showTab("rest","together"); });
+const tt=el("tgToday"); if(tt) tt.addEventListener("click",()=>{ if(typeof showTab==="function") showTab("pro","together"); });
 
 /* my roster changed in Roster check: redraw and share the new days */
 window.addEventListener("lay-roster",()=>{ render(); publishSoon(); });
 window.addEventListener("storage",e=>{ if(e.key&&e.key.startsWith("lay.")) render(); });
-document.querySelector('#tab-rest .seg [data-sub="together"]').addEventListener("click",()=>{ render(); refresh(); });
+document.querySelector('#tab-pro .seg [data-sub="together"]').addEventListener("click",()=>{ render(); refresh(); });
 window.LayoverTogether={render,refresh,upcoming,shareDays,rosterDays};
 let wasLocked=locked(), wasIn=null;
 new MutationObserver(()=>{ if(locked()!==wasLocked){ wasLocked=locked(); render(); refresh(); } }).observe(document.body,{attributes:true,attributeFilter:["class"]});

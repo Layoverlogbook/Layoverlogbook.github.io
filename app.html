@@ -1186,6 +1186,25 @@ body.locked .tg-today-txt small::after{content:"PRO";margin-left:8px;background:
 main .guesthero{background:linear-gradient(150deg,#13233F,#2A1E52);color:#fff;box-shadow:0 24px 40px -26px rgba(19,35,63,.8)}
 main .guesthero h2{color:#fff}
 main .guesthero .hint{color:#D9E2EE}
+
+/* ---- Pro tab ---- */
+.tabbar .tab-pro svg{stroke:#C98A00}
+.tabbar .tab-pro[aria-selected="true"] svg{background:linear-gradient(160deg,#F0B429,#C98A00);stroke:#13233F;box-shadow:0 8px 16px -8px #C98A00}
+.tabbar .tab-pro{color:color-mix(in srgb,#C98A00 70%,var(--ink))}
+@media (max-width:430px){.tabbar button{font-size:.6875rem;padding-inline:0}.tabbar svg{width:42px;padding-inline:9px}}
+@media (max-width:360px){.tabbar button{font-size:.625rem}.tabbar svg{width:36px;padding-inline:6px}}
+#tab-pro .pagehead h1{display:flex;align-items:center;gap:10px}
+#tab-pro .pagehead h1 .probadge{font-size:.9rem;padding:4px 8px;-webkit-text-fill-color:#13233F}
+.pro-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pro-tile{display:grid;gap:4px;text-align:left;border:1px solid var(--line);border-radius:18px;padding:16px 14px;background:var(--surface);color:var(--ink);min-width:0;
+  box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 4px 0 color-mix(in srgb,var(--line) 90%,transparent),0 16px 26px -20px rgba(19,35,63,.55);transition:transform .15s var(--ease)}
+.pro-tile:active{transform:translateY(3px)}
+.pro-tile svg{width:42px;height:42px;padding:9px;border-radius:13px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;background:var(--tc);box-shadow:0 6px 14px -6px var(--tc);margin-bottom:4px}
+.pro-tile b{font-family:var(--display);font-weight:800;font-size:1.25rem;line-height:1.05}
+.pro-tile span{color:var(--muted);font-size:.8125rem;line-height:1.3}
+.pro-plan .pro-on-txt{display:none}
+body:not(.locked) .pro-plan .pro-on-txt{display:block}
+body:not(.locked) .pro-plan .pro-off-txt{display:none}
 /* incoming share */
 .tg-in{text-align:left}
 .tg-in-art{height:90px;position:relative;perspective:400px}
@@ -1228,7 +1247,7 @@ main .guesthero .hint{color:#D9E2EE}
 
 <div class="appbar">
   <div class="wrap">
-    <div class="brand">Layover <b>Logbook</b> <span class="ver">v6.2</span></div>
+    <div class="brand">Layover <b>Logbook</b> <span class="ver">v6.3</span></div>
     <div class="barright">
     <button class="avatar" type="button" id="acctBtn" hidden aria-label="Your account"></button>
     <button class="joinbtn" type="button" id="joinBtn" hidden>Sign up</button>
@@ -1593,10 +1612,8 @@ main .guesthero .hint{color:#D9E2EE}
 <section class="panel" id="tab-rest" hidden>
   <div class="pagehead">
     <h1>Rest</h1>
-    <div class="seg" role="tablist" aria-label="Rest">
+    <div class="seg" role="tablist" aria-label="Rest" hidden>
       <button type="button" data-sub="layovers" aria-selected="true">Layovers</button>
-      <button type="button" data-sub="roster" aria-selected="false">Roster check <span class="probadge">PRO</span></button>
-      <button type="button" data-sub="together" aria-selected="false">Together <span class="probadge">PRO</span></button>
     </div>
     <div class="chips" id="fgPeriod">
       <button class="chip" type="button" data-d="7" aria-pressed="false">Last 7 days</button>
@@ -1670,6 +1687,18 @@ main .guesthero .hint{color:#D9E2EE}
     </details>
     <p class="note">A planning guide, not your company's rules. Unfit to fly? Report it.</p>
   </div>
+  </div>
+</section>
+
+<!-- ===================== PRO ===================== -->
+<section class="panel" id="tab-pro" hidden>
+  <div class="pagehead">
+    <h1>Pro <span class="probadge">PRO</span></h1>
+    <div class="seg" role="tablist" aria-label="Pro">
+      <button type="button" data-sub="together" aria-selected="true">Off together</button>
+      <button type="button" data-sub="roster" aria-selected="false">Roster check</button>
+      <button type="button" data-sub="all" aria-selected="false">All Pro</button>
+    </div>
   </div>
   <div data-panel="roster" class="panel" hidden>
     <div class="card prolock">
@@ -1776,7 +1805,7 @@ main .guesthero .hint{color:#D9E2EE}
       <div class="row" style="justify-content:space-between"><button class="btn ghost" type="button" id="rcEdDel">Delete</button><span class="row"><button class="btn ghost" type="button" id="rcEdCancel">Cancel</button><button class="btn" type="button" id="rcEdSave">Save</button></span></div>
     </div>
   </div>
-  <div data-panel="together" class="panel" id="tgPanel" hidden>
+  <div data-panel="together" class="panel" id="tgPanel">
     <div class="tg-hero" id="tgHero">
       <div class="tg-scene" aria-hidden="true">
         <div class="tg-orbit">
@@ -1860,6 +1889,21 @@ main .guesthero .hint{color:#D9E2EE}
           <li>Upload next month's roster and your friends see it straight away. Disconnect, change your code or stop sharing at any time.</li>
         </ul>
       </details>
+    </div>
+  </div>
+  <div data-panel="all" class="panel" hidden>
+    <div class="card pro-plan" id="proPlanCard">
+      <div class="cardhead"><h2>Your plan</h2><span class="probadge">PRO</span></div>
+      <p class="hint pro-on-txt">Everything below is unlocked. Thank you for supporting Layover Logbook.</p>
+      <p class="hint pro-off-txt">One subscription unlocks all of this. Core features stay free.</p>
+      <button class="btn proGo pro-off-txt" type="button" style="justify-self:start">Unlock with Pro</button>
+    </div>
+    <div class="pro-grid">
+      <button type="button" class="pro-tile" data-pro-go="pro|together" style="--tc:#B0136E"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M9 14.5l2 2 4-4"/></svg><b>Off together</b><span>Days off with crew friends</span></button>
+      <button type="button" class="pro-tile" data-pro-go="pro|roster" style="--tc:#2E4E86"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h8l4 4v13H7z"/><path d="M15 3.5v4h4M10 12h6M10 15.5h6"/><circle cx="5" cy="18" r="2.5"/></svg><b>Roster check</b><span>Limits and fatigue from a picture</span></button>
+      <button type="button" class="pro-tile" data-pro-go="rest|layovers|fgShift" style="--tc:#13774A"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16"/><path d="M7 15l4-5 3 3 5-6"/></svg><b>Fatigue dashboard</b><span>Weekly load, trip by trip</span></button>
+      <button type="button" class="pro-tile" data-pro-go="money|summary" style="--tc:#C98A00"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6" width="17" height="13" rx="2.5"/><path d="M3.5 10h17"/><circle cx="16.5" cy="14.5" r="1.2"/></svg><b>Money insights</b><span>Allowance kept, Excel export</span></button>
+      <button type="button" class="pro-tile" data-pro-go="crew" style="--tc:#8A4FD8"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c.4-3 2.6-4.8 5.5-4.8s5.1 1.8 5.5 4.8"/><circle cx="16.8" cy="9.8" r="2.5"/><path d="M16.5 14.3c2.2.1 3.7 1.6 4 4.2"/></svg><b>Full crew feed</b><span>Every post, every city</span></button>
     </div>
   </div>
 </section>
@@ -1981,6 +2025,7 @@ main .guesthero .hint{color:#D9E2EE}
     <button type="button" data-tab="crew" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="3.2"/><path d="M3.5 19c.4-3 2.6-4.8 5.5-4.8s5.100 1.800 5.500 4.800"/><circle cx="16.800" cy="9.800" r="2.500"/><path d="M16.500 14.300c2.200.1 3.700 1.600 4 4.200"/></svg>Crew</button>
     <button type="button" data-tab="money" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6" width="17" height="13" rx="2.5"/><path d="M3.5 10h17"/><circle cx="16.5" cy="14.5" r="1.2"/></svg>Money</button>
     <button type="button" data-tab="rest" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 14.5A8 8 0 1 1 9.5 4.5a6.5 6.5 0 0 0 10 10z"/></svg>Rest</button>
+    <button type="button" data-tab="pro" aria-selected="false" class="tab-pro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17.5L3 7.5l5 4 4-6.5 4 6.5 5-4-1 10z"/><path d="M5 20.5h14"/></svg>Pro</button>
     <button type="button" data-tab="notebook" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h11a1.5 1.5 0 0 1 1.5 1.5v14a1.5 1.5 0 0 1-1.5 1.5H6z"/><path d="M6 3.5v17M9.5 8h5.5M9.5 11.5h5.5"/></svg>Notebook</button>
   </div>
 </nav>
@@ -2197,7 +2242,7 @@ function setDest(d){
 /* ---------- tabs ---------- */
 /* Five sections in the bottom bar; some have sub-pages chosen with a segmented control */
 const TAB_ALIAS={plan:["today"],near:["explore","nearby"],ideas:["explore","ideas"],pack:["explore","nearby"],
-  tips:["notebook","notes"],lists:["notebook","notes"],journal:["notebook","journal"],fatigue:["rest","layovers"],layovers:["rest","layovers"],roster:["rest","roster"],together:["rest","together"],
+  tips:["notebook","notes"],lists:["notebook","notes"],journal:["notebook","journal"],fatigue:["rest","layovers"],layovers:["rest","layovers"],roster:["pro","roster"],together:["pro","together"],pro:["pro","together"],
   spending:["money","summary"],allowance:["money","summary"]};
 const on=(id,ev,fn)=>{ const el=$(id); if(el) el.addEventListener(ev,fn); };
 function showSub(tab,sub){
@@ -2206,6 +2251,7 @@ function showSub(tab,sub){
   sec.querySelectorAll(":scope [data-panel]").forEach(p=>p.hidden=p.dataset.panel!==sub);
   if(tab==="money") $("spPeriod").hidden=sub==="add";
   if(tab==="rest") $("fgPeriod").hidden=sub!=="layovers";
+  if(tab==="pro"&&sub==="together"&&window.LayoverTogether){ LayoverTogether.render(); LayoverTogether.refresh(); }
   if(sub==="nearby"&&nb.map) setTimeout(()=>nb.map.invalidateSize(),50);
 }
 function showTab(name,sub){
@@ -3505,7 +3551,8 @@ const TOUR=[
   {sel:'.tabbar [data-tab="explore"]',tab:"today",t:"Explore",b:"Find food, groceries, pharmacies and sights near your hotel, plus ideas that fit your free time."},
   {sel:'.tabbar [data-tab="crew"]',tab:"today",t:"Crew feed",b:"Photos, videos, places and ratings shared by crew of every airline, in every city. It is private to crew: you join with an invite code from a colleague."},
   {sel:'.tabbar [data-tab="money"]',tab:"today",t:"Money",b:"Record what you spend in any currency. Summary shows your totals in your home currency and how much of your allowance you keep."},
-  {sel:'.tabbar [data-tab="rest"]',tab:"today",t:"Rest",b:"Your trips route by route, checked against flight time rules, and your fatigue over the last weeks. Notebook holds your journal, notes and account, and can replay this tour."}
+  {sel:'.tabbar [data-tab="rest"]',tab:"today",t:"Rest",b:"Your trips route by route, checked against flight time rules, and your fatigue over the last weeks. Notebook holds your journal, notes and account, and can replay this tour."},
+  {sel:'.tabbar [data-tab="pro"]',tab:"today",t:"Pro",b:"Every Pro feature in one place: Off together to find days off with crew friends, Roster check, and links to the fatigue dashboard, money insights and the full crew feed."}
 ];
 let tourI=-1;
 function tourEls(){
@@ -3593,7 +3640,7 @@ function applyPlan(){
     if(Plan.paywall){
       const i=Plan.info||{};
       $("planName").innerHTML=pro?'Pro <span class="probadge">PRO</span>':"Free";
-      $("planLine").textContent=!pro?"Pro unlocks the full crew feed, roster check, the fatigue dashboard and money insights."
+      $("planLine").textContent=!pro?"Pro unlocks Off together, roster check, the full crew feed, the fatigue dashboard and money insights."
         :i.cancel_at?`Your Pro plan ends on ${fmtDay(i.cancel_at)}.`
         :i.status==="past_due"?"Your last payment didn't go through. Update your card to keep Pro."
         :i.period_end?`Renews on ${fmtDay(i.period_end)}.`:"Everything is unlocked.";
@@ -3620,6 +3667,9 @@ function openPro(){
 function closePro(){ $("proBackdrop").hidden=true; $("proSheet").hidden=true; }
 on("proClose","click",closePro); on("proBackdrop","click",closePro);
 document.addEventListener("click",e=>{ if(e.target.closest(".proGo")) openPro(); });
+document.addEventListener("click",e=>{ const t=e.target.closest("[data-pro-go]"); if(!t) return;
+  const [tab,sub,anchor]=t.dataset.proGo.split("|"); showTab(tab,sub);
+  if(anchor) setTimeout(()=>{ const a=$(anchor); if(a) (a.closest(".card")||a).scrollIntoView({behavior:"smooth",block:"start"}); },120); });
 let paddleReady=null;
 function loadPaddle(){
   return paddleReady??=new Promise((res,rej)=>{
