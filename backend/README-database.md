@@ -10,3 +10,13 @@ Triggers that run before a row is added, on top of the daily limits already in `
 - Table `page_views`: page path, referring domain, 2-letter language, device type, first-page-of-visit flag, time. No IP, no user id, no cookie. RLS on with no policies, so it can't be read or written directly.
 - `track_view(...)`: called by `/analytics.js` on every page; checks and cleans the values, ignores floods.
 - `site_stats(p_days)`: totals, views per day, top pages, referrers, devices and languages. Only works for an owner listed in `crew_owners`; shown in the app under Notebook → Account and data → Site statistics.
+
+## Off together roster sharing (migrations `roster_sharing_off_together`, `roster_sharing_fix_days_check`)
+Crew share only day types (O off, L leave, P part day, S standby, D duty, A away, - unknown), never flights, routes or times.
+- `roster_shares`: one row per user: display name, first day, the day string (max 400 days) and a private 10-character code.
+- `roster_links`: who may see whose days (owner -> viewer). Connecting with a code adds both directions.
+- `roster_connect_attempts`: limits code guesses to 20 an hour per user.
+- RLS is on with no policies, so the tables can only be reached through these functions (signed-in users only):
+  `roster_publish(name, start, days)` returns my code · `roster_connect(code)` · `roster_friends()` (Pro when the paywall is on) ·
+  `roster_mine()` · `roster_disconnect(friend)` · `roster_new_code()` · `roster_unpublish()`.
+- Rows are removed with the account (`on delete cascade`).

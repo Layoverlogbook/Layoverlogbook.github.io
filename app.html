@@ -1010,7 +1010,7 @@ main .wrap{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
 .pagehead h1 .dn{-webkit-text-fill-color:var(--accent)}
 
 /* glassy cards with real depth */
-main .card{background:color-mix(in srgb,var(--surface) 86%,transparent);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);box-shadow:var(--depth)}
+main .card:not(.guesthero):not(.prolock){background:color-mix(in srgb,var(--surface) 86%,transparent);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);box-shadow:var(--depth)}
 
 /* pointer tilt (fx3d.js sets --rx/--ry) */
 .pass,.tg-hero,.tile,.tg-today,.card.tilt{transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transform-style:preserve-3d;transition:transform .5s var(--ease),box-shadow .3s var(--ease)}
@@ -1175,6 +1175,17 @@ body.locked .tg-today-txt small::after{content:"PRO";margin-left:8px;background:
 @media (prefers-reduced-motion:no-preference){.tg-today-ico{animation:tilty 5s ease-in-out infinite alternate}}
 @keyframes tilty{to{transform:perspective(200px) rotateY(18deg) rotateX(-6deg)}}
 
+
+.tg-codebox{display:grid;gap:8px;border-radius:18px;padding:16px;background:linear-gradient(150deg,#13233F,#2A1E52);color:#fff}
+.tg-codebox .label,.tg-codebox .hint{color:#C9D6E4}
+.tg-code{font-family:var(--display);font-weight:800;font-size:2rem;letter-spacing:.14em;color:var(--beacon);word-break:break-all}
+.tg-codebox .btn.ghost{color:#fff;border-color:rgba(255,255,255,.45)}
+.tg-codebox .btn:not(.ghost){background:var(--beacon);color:#13233F}
+.tg-sign{display:grid;gap:8px}
+.tg-ex{font-size:.75rem;color:var(--muted)}
+main .guesthero{background:linear-gradient(150deg,#13233F,#2A1E52);color:#fff;box-shadow:0 24px 40px -26px rgba(19,35,63,.8)}
+main .guesthero h2{color:#fff}
+main .guesthero .hint{color:#D9E2EE}
 /* incoming share */
 .tg-in{text-align:left}
 .tg-in-art{height:90px;position:relative;perspective:400px}
@@ -1217,7 +1228,7 @@ body.locked .tg-today-txt small::after{content:"PRO";margin-left:8px;background:
 
 <div class="appbar">
   <div class="wrap">
-    <div class="brand">Layover <b>Logbook</b> <span class="ver">v5.3</span></div>
+    <div class="brand">Layover <b>Logbook</b> <span class="ver">v6.2</span></div>
     <div class="barright">
     <button class="avatar" type="button" id="acctBtn" hidden aria-label="Your account"></button>
     <button class="joinbtn" type="button" id="joinBtn" hidden>Sign up</button>
@@ -1250,7 +1261,7 @@ body.locked .tg-today-txt small::after{content:"PRO";margin-left:8px;background:
     <li><b>Fatigue dashboard:</b> rules, weekly load, trip charts.</li>
     <li><b>Money insights:</b> allowance kept, cost of each layover, Excel export.</li>
     <li><b>Roster check:</b> roster to calendar, limits and fatigue checked.</li>
-    <li><b>Off together:</b> share rosters with crew friends and find your days off together.</li>
+    <li><b>Off together:</b> connect rosters privately with crew friends and find your days off together.</li>
   </ul>
   <div class="plans" id="proPlans">
     <button class="planbtn best" type="button" data-plan="yearly"><b>Yearly</b><span class="p" id="proYear"></span><small>per year · best value</small></button>
@@ -1785,10 +1796,10 @@ body.locked .tg-today-txt small::after{content:"PRO";margin-left:8px;background:
 
     <div class="card prolock">
       <div class="cardhead"><h2>Off together</h2><span class="probadge">PRO</span></div>
-      <p class="hint">Share rosters with crew friends. See every day you're all off.</p>
+      <p class="hint">You upload your roster, your crew friends upload theirs. See every day you're all off.</p>
       <ul class="insights">
-        <li>Your days straight from Roster check, or tap them in</li>
-        <li>One link to share in any chat: no flights, routes or times</li>
+        <li>Upload your roster once. The app reads it, nothing to type</li>
+        <li>Connect privately with a code: only crew you connect with see your days</li>
         <li>Full and part days together, streaks for a quick trip</li>
         <li>Match one friend or the whole group, add it to your calendar</li>
       </ul>
@@ -1804,31 +1815,37 @@ body.locked .tg-today-txt small::after{content:"PRO";margin-left:8px;background:
       <ul class="list tg-hits" id="tgList"></ul>
     </div>
 
-    <div class="card" data-pro>
-      <div class="cardhead"><h2>Your days</h2><span class="hint" id="tgMeSrc"></span></div>
-      <label class="field"><span class="label">Your name, as crew friends know you</span><input id="tgName" maxlength="24" placeholder="e.g. Sam" autocomplete="nickname"></label>
-      <p class="hint" id="tgNameMsg" role="status" style="color:var(--bad)"></p>
-      <div class="tg-brush" id="tgBrush" role="toolbar" aria-label="Mark days as">
-        <button type="button" class="chip b-O" data-b="O" aria-pressed="true">Off</button>
-        <button type="button" class="chip b-P" data-b="P" aria-pressed="false">Part day</button>
-        <button type="button" class="chip b-D" data-b="D" aria-pressed="false">Duty</button>
-        <button type="button" class="chip b-A" data-b="A" aria-pressed="false">Away</button>
-        <button type="button" class="chip b-L" data-b="L" aria-pressed="false">Leave</button>
-        <button type="button" class="chip b-clear" data-b="clear" aria-pressed="false">Clear</button>
+    <div class="card" data-pro id="tgRosterCard">
+      <div class="cardhead"><h2>Your roster</h2><span class="hint" id="tgMeSrc"></span></div>
+      <div class="tg-sign" id="tgSignIn" hidden>
+        <p class="hint">Sign in to share your roster privately with crew friends.</p>
+        <button class="btn" type="button" id="tgSignBtn" style="justify-self:start">Sign in</button>
       </div>
+      <button type="button" class="rc-drop" id="tgDrop"><b>Upload your roster</b>Screenshots of your monthly roster, up to 4 pictures<div class="rc-thumbs" id="tgThumbs"></div></button>
+      <input type="file" id="tgFile" accept="image/*" multiple hidden>
+      <div class="rc-grid2">
+        <label class="field"><span class="label">Roster month</span><input type="month" id="tgMonth"></label>
+        <label class="field"><span class="label">Your name, as crew friends know you</span><input id="tgName" maxlength="24" placeholder="e.g. Sam" autocomplete="nickname"></label>
+      </div>
+      <div class="row"><button class="btn" type="button" id="tgRead" disabled>Read and share my roster</button></div>
+      <p class="hint" id="tgMsg" role="status"></p>
       <div class="rc-calhead"><span class="label" id="tgMeOff"></span><div class="row"><button class="btn ghost rc-sm tgPrev" type="button" aria-label="Previous month">‹</button><span class="label tgMonthLbl" style="min-width:104px;text-align:center"></span><button class="btn ghost rc-sm tgNext" type="button" aria-label="Next month">›</button></div></div>
       <div class="tg-cal" id="tgMeCal"></div>
-      <p class="hint">Pick a type, then tap or drag across days. Your Roster check fills this in for you.</p>
-      <div class="row"><button class="btn" type="button" id="tgShare">Share my days</button><button class="btn ghost" type="button" id="tgClearHand" hidden>Undo hand changes</button></div>
-      <div class="row cform" id="tgCodeBox" hidden><input id="tgCode" readonly aria-label="Your share link"><button class="btn ghost" type="button" id="tgCopy">Copy</button></div>
-      <p class="note">Only off, duty, away and leave travel in the link. No flights, routes, times or hotels.</p>
+      <p class="hint">Read from your roster. To fix a day, edit that duty in Roster check.</p>
+      <p class="note">Only off, duty, away and leave are shared, and only with crew you connect with. No flights, routes, times or hotels.</p>
     </div>
 
     <div class="card" data-pro>
-      <div class="cardhead"><h2>Crew friends</h2><span class="hint">Saved on this device</span></div>
+      <div class="cardhead"><h2>Crew friends</h2><span class="hint" id="tgSync"></span></div>
+      <div class="tg-codebox" id="tgCodeBox" hidden>
+        <span class="label">Your private code</span>
+        <div class="tg-code" id="tgCode"></div>
+        <p class="hint">Send it only to crew you want to plan with. When they connect, you both see each other's days.</p>
+        <div class="row"><button class="btn" type="button" id="tgSend">Send my code</button><button class="btn ghost rc-sm" type="button" id="tgNewCode">New code</button><button class="btn ghost rc-sm" type="button" id="tgStop">Stop sharing</button></div>
+      </div>
       <ul class="list" id="tgCrewList"></ul>
-      <form class="row cform" id="tgAddForm"><input id="tgPaste" placeholder="Paste a friend's link or code" aria-label="Friend's link or code" autocomplete="off" spellcheck="false"><button class="btn" type="submit">Add</button></form>
-      <p class="hint" id="tgAddMsg" role="status" style="color:var(--bad)"></p>
+      <form class="row cform" id="tgAddForm"><input id="tgPaste" placeholder="Friend's code, e.g. K7QM2XPD4A" aria-label="Friend's private code" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="200"><button class="btn" type="submit">Connect</button></form>
+      <p class="hint" id="tgAddMsg" role="status"></p>
       <button class="btn ghost" type="button" id="tgExample" style="justify-self:start">See an example friend</button>
     </div>
 
@@ -1836,11 +1853,11 @@ body.locked .tg-today-txt small::after{content:"PRO";margin-left:8px;background:
       <details class="more" style="border:0;padding:0">
         <summary>How Off together works</summary>
         <ul class="insights">
-          <li><b>Your days</b> come from Roster check: days with no duty are days off, a short duty that ends by 16:00 or starts from 17:00 at home is a part day, and nights at an outstation are away.</li>
-          <li><b>Share my days</b> makes a link holding only those day types for the coming months. Send it in any chat.</li>
-          <li><b>When a friend opens it</b>, the app shows the days you are both off. Send yours back so they see the same.</li>
+          <li><b>Upload your roster</b> pictures once. The app reads them and works out each day: days with no duty are off, a short duty that ends by 16:00 or starts from 17:00 at home is a part day, nights at an outstation are away.</li>
+          <li><b>Only day types are shared</b>, privately, never flights, routes, times or hotels.</li>
+          <li><b>Send your private code</b> to a crew friend. When they connect, you both see each other's days. Nobody else can.</li>
           <li><b>✦ days</b> are days everyone picked is off or on leave. Part days mean everyone is free for at least part of the day.</li>
-          <li>Rosters change. Share again after a swap or a new month.</li>
+          <li>Upload next month's roster and your friends see it straight away. Disconnect, change your code or stop sharing at any time.</li>
         </ul>
       </details>
     </div>
@@ -4279,7 +4296,7 @@ const el=id=>document.getElementById(id);
 const isLocked=()=>document.body.classList.contains("locked");
 let ruleId=lsGet("lay.rcRule","qatar"), custom=lsGet("lay.rcCustom",{}), roster=lsGet("lay.roster",[]), carry=lsGet("lay.rcCarry",{});
 let files=[], viewMonth=null, selDay=null, result=null, editIdx=null;
-const save=()=>{ lsSet("lay.rcRule",ruleId); lsSet("lay.rcCustom",custom); lsSet("lay.roster",roster); lsSet("lay.rcCarry",carry); };
+const save=()=>{ lsSet("lay.rcRule",ruleId); lsSet("lay.rcCustom",custom); lsSet("lay.roster",roster); lsSet("lay.rcCarry",carry); window.dispatchEvent(new Event("lay-roster")); };
 const rules=()=>({...RC.RULESETS[ruleId],...(custom[ruleId]||{})});
 const fh=RC.fmtH;
 const KIND={FLY:"Flight","SBY-A":"Airport standby","SBY-H":"Home standby",TRN:"Training",OFF:"Day off",LEAVE:"Leave"};
@@ -4466,6 +4483,8 @@ function init(){
 }
 function shift(n){ const [y,m]=viewMonth.split("-").map(Number); viewMonth=new Date(Date.UTC(y,m-1+n,1)).toISOString().slice(0,7); renderCal(rules()); }
 init();
+/* Off together reads a roster too: pick it up here without a reload */
+window.RosterCheck={reload(){ roster=lsGet("lay.roster",[]); viewMonth=null; selDay=null; run(); },rules};
 })();
 
 </script>
@@ -4473,10 +4492,11 @@ init();
 <div class="backdrop" id="tgInBg" hidden></div>
 <div class="sheet tg-in" id="tgIn" hidden role="dialog" aria-modal="true" aria-labelledby="tgInTitle">
   <div class="tg-in-art" aria-hidden="true"><span></span><span></span></div>
-  <h2 id="tgInTitle">A crew friend shared their days off</h2>
+  <h2 id="tgInTitle">Connect rosters?</h2>
   <p class="hint" id="tgInLine"></p>
-  <p class="hint">Add them to see the days you're both off. Only day types are shared: no flights, routes or times.</p>
-  <div class="row"><button class="btn" type="button" id="tgInAdd">Add and compare</button><button class="btn ghost" type="button" id="tgInNo">Not now</button></div>
+  <p class="hint">You'll both see each other's days off. Only day types are shared: no flights, routes or times. You can disconnect at any time.</p>
+  <p class="hint" id="tgInMsg" role="status"></p>
+  <div class="row"><button class="btn" type="button" id="tgInAdd">Connect</button><button class="btn ghost" type="button" id="tgInNo">Not now</button></div>
 </div>
 
 <div class="legal-sheet" id="legalSheet" role="dialog" aria-modal="true" aria-labelledby="legalTitle" hidden>
