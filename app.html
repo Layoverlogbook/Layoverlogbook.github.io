@@ -2076,14 +2076,14 @@ body.touring .chat-root{display:none}
     </div>
     <div class="banner" id="delConfirm" hidden><span>This permanently deletes your account and everything saved in it</span><span class="row"><button class="btn" type="button" id="delYes" style="background:var(--bad);color:#fff">Delete forever</button><button class="btn ghost" type="button" id="delNo">Cancel</button></span></div>
     <details class="more" id="siteStats" hidden>
-      <summary>Site statistics (only you see this)</summary>
+      <summary>Owner dashboard: users, installs, payments (only you see this)</summary>
       <div class="seg" role="tablist" aria-label="Period" style="margin-top:8px">
         <button type="button" data-days="7" aria-selected="false">7 days</button>
         <button type="button" data-days="30" aria-selected="true">30 days</button>
         <button type="button" data-days="90" aria-selected="false">90 days</button>
       </div>
       <div id="stBody" aria-live="polite"><p class="hint">Loading…</p></div>
-      <p class="hint" style="font-size:.8125rem">No cookies, no personal data.</p>
+      <p class="hint" style="font-size:.8125rem">Visits are counted without cookies. Installs count the first time each installed copy is opened, so a reinstall counts again. Revenue is an estimate before Paddle's fees and tax; Paddle has the exact figures.</p>
     </details>
     <details class="more">
       <summary>Backup file</summary>
@@ -3574,11 +3574,34 @@ let statsChecked=false, statsDays=30;
 async function loadStats(days){
   const box=$("stBody"); if(!box) return;
   try{
-    const d=await rpc("site_stats",{p_days:days}); $("siteStats").hidden=false;
+    const [d,o]=await Promise.all([rpc("site_stats",{p_days:days}),rpc("owner_stats",{p_days:days}).catch(()=>null)]); $("siteStats").hidden=false;
     const max=Math.max(1,...d.by_day.map(x=>x.views)), fmt=n=>Number(n).toLocaleString("en-GB");
+    const pct=(a,b)=>b?Math.round(a/b*100)+"%":"–", money=n=>"$"+Number(n||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+    const KIND={home_screen:"Home screen",android:"Android app",desktop:"Desktop app",ios:"iPhone app"};
+    const STATUS={free:"Free",active:"Pro",trialing:"Trial",past_due:"Payment due",canceled:"Cancelled",cancelled:"Cancelled",paused:"Paused"};
+    const biz=!o?"":`<p class="label" style="margin-top:6px">Users and money</p>
+      <div class="rc-stats" style="margin-top:6px">
+        <div class="rc-stat"><div class="big">${fmt(o.accounts)}</div><div class="hint">Accounts${o.accounts_new?` · +${fmt(o.accounts_new)} in ${days} days`:""}</div></div>
+        <div class="rc-stat"><div class="big">${fmt(o.installs)}</div><div class="hint">Installs${o.installs_new?` · +${fmt(o.installs_new)} in ${days} days`:""}</div></div>
+        <div class="rc-stat"><div class="big">${fmt(o.paying)}</div><div class="hint">Paying · ${pct(o.paying,o.accounts)} of accounts</div></div>
+        <div class="rc-stat"><div class="big">${money(o.mrr)}</div><div class="hint">Revenue per month</div></div></div>
+      <ul class="st-list" style="margin-top:8px">
+        <li><span>Pro monthly / yearly</span><b>${fmt(o.monthly)} / ${fmt(o.yearly)}</b></li>
+        <li><span>In free trial</span><b>${fmt(o.trialing)}</b></li>
+        <li><span>Will cancel at period end</span><b>${fmt(o.cancelling)}</b></li>
+        <li><span>Payment failed, retrying</span><b>${fmt(o.past_due)}</b></li>
+        <li><span>Cancelled so far</span><b>${fmt(o.cancelled)}</b></li>
+        <li><span>Used the app in ${days} days</span><b>${fmt(o.active)}</b></li>
+        <li><span>Joined the crew feed</span><b>${fmt(o.crew)}</b></li>
+        ${o.unconfirmed?`<li><span>Signed up, email not confirmed</span><b>${fmt(o.unconfirmed)}</b></li>`:""}
+        ${Object.entries(o.install_kinds||{}).map(([k,n])=>`<li><span>Installs: ${esc(KIND[k]||k)}</span><b>${fmt(n)}</b></li>`).join("")}
+      </ul>
+      <p class="label" style="margin-top:12px">Newest accounts</p>
+      ${o.recent.length?`<ul class="st-list">${o.recent.map(r=>`<li><span style="overflow:hidden;text-overflow:ellipsis">${esc(r.email)}<small class="hint" style="display:block">Joined ${esc(r.joined)}${r.crew?" · crew feed":""}${r.confirmed?"":" · not confirmed"}</small></span><b>${esc(STATUS[r.status]||r.status)}${r.plan?" "+esc(r.plan):""}</b></li>`).join("")}</ul>`:'<p class="hint">None yet.</p>'}
+      <p class="label" style="margin-top:12px">Website</p>`;
     const list=(rows,k,v)=>rows.length?`<ul class="st-list">${rows.map(r=>`<li><span>${esc(r[k])}</span><b>${fmt(r[v])}</b></li>`).join("")}</ul>`:'<p class="hint">None yet.</p>';
     const dev=d.devices||{}, devTotal=Object.values(dev).reduce((a,b)=>a+b,0)||1;
-    box.innerHTML=`<div class="rc-stats" style="margin-top:10px">
+    box.innerHTML=biz+`<div class="rc-stats" style="margin-top:10px">
         <div class="rc-stat"><div class="big">${fmt(d.visits)}</div><div class="hint">Visits</div></div>
         <div class="rc-stat"><div class="big">${fmt(d.views)}</div><div class="hint">Page views</div></div></div>
       <div class="st-bars" role="img" aria-label="Page views per day">${d.by_day.map(x=>`<i style="height:${Math.round(x.views/max*100)}%" title="${x.day}: ${x.views} views"></i>`).join("")}</div>
