@@ -1332,7 +1332,7 @@ body.touring .chat-root{display:none}
 
 <div class="appbar">
   <div class="wrap">
-    <div class="brand">Layover <b>Logbook</b> <span class="ver">v6.5</span></div>
+    <div class="brand">Layover <b>Logbook</b> <span class="ver">v6.7</span></div>
     <div class="barright">
     <button class="avatar" type="button" id="acctBtn" hidden aria-label="Your account"></button>
     <button class="joinbtn" type="button" id="joinBtn" hidden>Sign up</button>
@@ -1365,6 +1365,7 @@ body.touring .chat-root{display:none}
     <li><b>Fatigue dashboard:</b> rules, weekly load, trip charts.</li>
     <li><b>Money insights:</b> allowance kept, cost of each layover, Excel export.</li>
     <li><b>Roster check:</b> roster to calendar, limits and fatigue checked.</li>
+    <li><b>Connect your AI:</b> ask Claude or ChatGPT about your layovers and spending, and log expenses by chat.</li>
     <li><b>Off together:</b> connect rosters privately with crew friends and find your days off together.</li>
   </ul>
   <div class="plans" id="proPlans">
@@ -2092,6 +2093,23 @@ body.touring .chat-root{display:none}
     <div class="banner" id="bkConfirm" hidden><span id="bkInfo"></span><span class="row"><button class="btn" type="button" id="bkYes">Replace my data</button><button class="btn ghost" type="button" id="bkNo">Cancel</button></span></div>
     <p class="hint" id="bkMsg" aria-live="polite"></p>
     </details>
+  </div>
+  <div class="card" id="aiCard" hidden>
+    <div class="cardhead"><h2>Connect your AI</h2><span class="probadge">PRO</span></div>
+    <p class="hint">Ask Claude, ChatGPT or another AI assistant about your layovers, free time and spending, and log expenses just by chatting. Your assistant only sees your own Layover Logbook data, never your crew feed or friends.</p>
+    <div class="row" id="aiMake">
+      <input id="aiName" maxlength="40" placeholder="Name, e.g. Claude on my laptop" aria-label="Key name" style="flex:1;min-width:0">
+      <button class="btn" type="button" id="aiCreate">Create a key</button>
+    </div>
+    <p class="hint" id="aiMsg" aria-live="polite"></p>
+    <div id="aiNew" hidden><div class="banner" style="display:grid;gap:8px">
+      <b>Your new key. Copy it now: it won't be shown again.</b>
+      <div class="field"><div class="label">Connector address (Claude, ChatGPT)</div><code id="aiUrl" style="word-break:break-all;font-size:.8125rem"></code></div>
+      <div class="row"><button class="btn" type="button" id="aiCopyUrl">Copy address</button><button class="btn ghost" type="button" id="aiCopyCfg">Copy config for Claude Desktop / Cursor</button></div>
+      <p class="hint" style="font-size:.8125rem;color:inherit;opacity:.85">In Claude: Settings, Connectors, Add custom connector, then paste the address. Anyone with this address can read your layovers and spending, so keep it private. Remove the key below if it's ever shared.</p>
+    </div></div>
+    <div id="aiList"></div>
+    <a class="hint" href="index.html#ai" style="font-size:.8125rem">How it works and what to ask</a>
   </div>
   <div class="card" id="legalCard">
     <div class="cardhead"><h2>About and legal</h2></div>
@@ -3360,6 +3378,17 @@ async function sbRest(path,opt={}){
   return r;
 }
 
+/* Items an AI assistant added through the MCP server (via:"ai") after this phone last synced */
+function mergeAI(sd,since){
+  if(!sd||typeof sd!=="object") return 0;
+  const d=DB.data||(DB.data={}), fresh=x=>x&&x.via==="ai"&&(+x.at||0)>since-1000; let n=0;
+  if(Array.isArray(sd.tx)){ const have=new Set((d.tx||[]).map(t=>t.id));
+    sd.tx.forEach(t=>{ if(fresh(t)&&!have.has(t.id)){ (d.tx=Array.isArray(d.tx)?d.tx:[]).push(t); n++; } }); }
+  if(sd.wish&&typeof sd.wish==="object") for(const k in sd.wish){ const arr=sd.wish[k]; if(!Array.isArray(arr)) continue;
+    arr.forEach(w=>{ if(!fresh(w)) return; d.wish=d.wish&&typeof d.wish==="object"?d.wish:{}; const mine=d.wish[k]=Array.isArray(d.wish[k])?d.wish[k]:[];
+      if(!mine.some(x=>x.id&&x.id===w.id)){ mine.push(w); n++; } }); }
+  return n;
+}
 /* Sync: everything lives in one row per user. A local copy keeps the app working offline. */
 const Cloud={
   timer:null,busy:false,again:false,rev:0,serverAt:0,state:"",
@@ -3370,8 +3399,11 @@ const Cloud={
   async push(){
     clearTimeout(this.timer); if(!DB.cloud) return;
     if(this.busy){ this.again=true; return; }
-    this.busy=true; const rev=this.rev, at=new Date().toISOString();
+    this.busy=true; let rev=this.rev; const at=new Date().toISOString();
     try{
+      /* An AI assistant (MCP) may have added items since our last sync: keep them before saving over the row */
+      const srv=await this.pull();
+      if(srv&&Date.parse(srv.updated_at)>this.serverAt+1000&&mergeAI(srv.data,this.serverAt)){ loadState(); fillMissingQAR(); renderAll(); rev=this.rev; }
       await sbRest("user_data?on_conflict=user_id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},
         body:JSON.stringify({user_id:DB.cloud.uid,data:DB.data,updated_at:at})});
       this.serverAt=Date.parse(at);
@@ -3404,7 +3436,7 @@ async function startCloud(user){
     DB.data=c?c.data:{}; Cloud.serverAt=c?c.serverAt||0:0; Cloud.status(c&&c.dirty?"wait":"off");
     return true;
   }
-  if(c&&c.dirty&&(!row||c.at>Date.parse(row.updated_at))){ DB.data=c.data; Cloud.serverAt=c.serverAt||0; Cloud.rev++; Cloud.push(); }
+  if(c&&c.dirty&&(!row||c.at>Date.parse(row.updated_at))){ DB.data=c.data; Cloud.serverAt=c.serverAt||0; if(row) mergeAI(row.data,Cloud.serverAt); Cloud.rev++; Cloud.push(); }
   else if(row){ DB.data=row.data||{}; Cloud.serverAt=Date.parse(row.updated_at); Cloud.writeCache(false); Cloud.status("ok"); }
   else {
     /* New account: bring along what this phone saved without an account, once */
@@ -3565,6 +3597,48 @@ async function checkStatsAccess(){
 }
 
 /* ---------- account card ---------- */
+/* ---------- Connect your AI (MCP server, Pro) ---------- */
+const MCP_URL=SB+"/functions/v1/mcp";
+let aiLoaded=false;
+function renderAI(){
+  const card=$("aiCard"); if(!card) return;
+  card.hidden=!(DB.cloud&&CLOUD_ON);
+  if(card.hidden){ aiLoaded=false; $("aiList").innerHTML=""; $("aiNew").hidden=true; return; }
+  if(!aiLoaded){ aiLoaded=true; loadAIKeys(); }
+}
+const aiAgo=t=>{ if(!t) return "never used"; const m=Math.round((Date.now()-Date.parse(t))/6e4);
+  return m<2?"used just now":m<60?`used ${m} min ago`:m<1440?`used ${Math.round(m/60)} h ago`:`used ${Math.round(m/1440)} days ago`; };
+async function loadAIKeys(){
+  const box=$("aiList");
+  try{
+    const keys=await rpc("ai_key_list");
+    box.innerHTML=keys.length?`<div class="label" style="margin-top:6px">Your keys</div>`+keys.map(k=>`<div class="row" style="justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid var(--line,rgba(0,0,0,.08))">
+      <span><b>${esc(k.name)}</b> <span class="hint">…${esc(k.hint)} · ${aiAgo(k.last_used_at)}</span></span>
+      <button class="btn ghost" type="button" data-aidel="${esc(k.id)}">Remove</button></div>`).join(""):"";
+  }catch(e){ box.innerHTML=`<p class="hint">${esc(e.message)}</p>`; aiLoaded=false; }
+}
+on("aiCreate","click",async()=>{
+  if(!Plan.pro){ openPro(); return; }
+  const b=$("aiCreate"); b.disabled=true; $("aiMsg").textContent="";
+  try{
+    const k=await rpc("ai_key_create",{p_name:$("aiName").value});
+    const url=MCP_URL+"?key="+k.token;
+    $("aiUrl").textContent=url; $("aiNew").hidden=false; $("aiName").value="";
+    $("aiNew").dataset.url=url; $("aiNew").dataset.token=k.token;
+    loadAIKeys();
+  }catch(e){ $("aiMsg").textContent=e.message; if(/part of Pro/i.test(e.message)) openPro(); }
+  finally{ b.disabled=false; }
+});
+async function copyText(t,msg){ try{ await navigator.clipboard.writeText(t); toast(msg); }catch(e){ toast("Couldn't copy. Select the text and copy it."); } }
+on("aiCopyUrl","click",()=>copyText($("aiNew").dataset.url||"","Address copied. Paste it in your AI assistant's connector settings."));
+on("aiCopyCfg","click",()=>copyText(JSON.stringify({mcpServers:{"layover-logbook":{type:"http",url:MCP_URL,headers:{Authorization:"Bearer "+($("aiNew").dataset.token||"")}}}},null,2),"Config copied."));
+on("aiList","click",async e=>{
+  const b=e.target.closest("[data-aidel]"); if(!b) return;
+  b.disabled=true;
+  try{ await rpc("ai_key_revoke",{p_id:b.dataset.aidel}); $("aiNew").hidden=true; toast("Key removed. That assistant can't connect any more."); loadAIKeys(); }
+  catch(err){ b.disabled=false; toast(err.message); }
+});
+
 function renderAccount(){
   if(!$("dataCard")) return;
   const signed=!!DB.cloud;
@@ -3572,6 +3646,7 @@ function renderAccount(){
   $("acctBtn").hidden=!signed;
   $("joinBtn").hidden=signed||!WEBAPP||!CLOUD_ON;
   if(signed) $("acctBtn").textContent=(DB.cloud.email||"?").trim()[0].toUpperCase();
+  renderAI();
   if(signed) checkStatsAccess(); else { statsChecked=false; if($("siteStats")) $("siteStats").hidden=true; }
   $("acctSignin").hidden=signed||!WEBAPP||!CLOUD_ON; $("acctSignin").textContent="Sign up or sign in"; $("acctOut").hidden=!signed; $("acctDel").hidden=!signed;
   $("acctLine").textContent=signed?`Signed in as ${DB.cloud.email}. Your data is saved to your account and kept in step across your devices.`
