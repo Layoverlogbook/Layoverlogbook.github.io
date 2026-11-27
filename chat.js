@@ -2,7 +2,9 @@
    Rooms: the Crew lounge (everyone) and one room per city (crew on the same layover).
    Messages and photos are private to crew members; access is checked by the database
    (crew_messages and the crew_chat_* functions, see backend/crew-chat.sql).
-   The bubble stays hidden until the chat exists in the database. */
+   The bubble stays hidden until the chat exists in the database.
+   Ask AI: a help assistant in the same bubble (its own tab) that answers questions about the app.
+   Any signed-in user can use it, crew invite or not. Answers come from the ask-ai function (backend/ask-ai.ts). */
 (()=>{
 "use strict";
 if(typeof CLOUD_ON==="undefined"||!CLOUD_ON) return;
@@ -86,11 +88,14 @@ $("chatBody").addEventListener("scroll",()=>{ const b=$("chatBody"); nearBottom=
 
 /* ---------- rendering ---------- */
 function renderRooms(){
-  const rs=rooms(); if(!rs.some(r=>r.id===C.room)) C.room="lounge";
-  $("chatRooms").innerHTML=rs.map(r=>{ const n=unreadIn(r.id);
+  const rs=rooms(); if(C.room!==AI&&!rs.some(r=>r.id===C.room)) C.room="lounge";
+  $("chatRooms").innerHTML=`<button type="button" role="tab" class="chat-ai-tab" data-room="${AI}" aria-selected="${C.room===AI}">✦ Ask AI</button>`+rs.map(r=>{ const n=unreadIn(r.id);
     return `<button type="button" role="tab" data-room="${esc(r.id)}" aria-selected="${r.id===C.room}">${esc(r.name)}${n?` <b>${n>9?"9+":n}</b>`:""}</button>`; }).join("");
   const r=rs.find(x=>x.id===C.room);
-  $("chatSub").textContent=r&&r.id!=="lounge"?`Crew in ${r.name} right now`:"Crew of every airline · crew only";
+  $("chatTitle").textContent=C.room===AI?"Ask AI":"Crew chat";
+  $("chatSub").textContent=C.room===AI?"Questions about the app · AI can make mistakes":r&&r.id!=="lounge"?`Crew in ${r.name} right now`:"Crew of every airline · crew only";
+  $("chatText").placeholder=C.room===AI?"Ask about the app…":"Message the crew…";
+  const pic=wrap.querySelector(".chat-pic"); if(pic) pic.style.display=C.room===AI?"none":"";
 }
 function renderMsgs(){
   const list=C.msgs[C.room]||[], body=$("chatBody");
@@ -112,15 +117,105 @@ function renderMsgs(){
   body.querySelectorAll("img[data-photo]").forEach(loadImg);
   stick();
 }
-function gate(html){ $("chatGate").innerHTML=html; $("chatGate").hidden=!html; $("chatForm").hidden=!!html; $("chatBody").hidden=!!html; $("chatRooms").hidden=!!html; }
+function gate(html){ $("chatGate").innerHTML=html; $("chatGate").hidden=!html; $("chatForm").hidden=!!html; $("chatBody").hidden=!!html; $("chatRooms").hidden=!!html&&!signedIn(); }
 function renderGate(){
   if(!signedIn()) return gate(`<div class="chat-empty"><b>Crew chat</b><span>Talk with crew of every airline, share photos and meet up on layovers. Invite only.</span><button class="btn" type="button" data-go="signin">Sign in</button></div>`);
-  if(C.status==="notcrew") return gate(`<div class="chat-empty"><b>Crew only</b><span>Join with an invite code from a colleague. Then the chat opens for you.</span><button class="btn" type="button" data-go="join">Enter invite code</button></div>`);
+  if(C.status==="notcrew") return gate(`<div class="chat-empty"><b>Crew only</b><span>Join with an invite code from a colleague. Then the chat opens for you. Questions about the app? Tap Ask AI above.</span><button class="btn" type="button" data-go="join">Enter invite code</button></div>`);
   if(C.status==="offline") return gate(`<div class="chat-empty"><b>You're offline</b><span>Messages load when you're back online.</span></div>`);
   if(C.status==="ok"&&!C.me) return gate(`<form class="chat-empty" id="chatNameForm"><b>Pick your crew name</b><span>Shown next to your messages. A nickname is fine.</span><input id="chatName" maxlength="20" placeholder="e.g. SkyNomad" autocomplete="off" aria-label="Crew name"><button class="btn" type="submit">Save name</button><small class="chat-err" id="chatNameErr"></small></form>`);
   gate("");
 }
-function render(){ renderRooms(); renderGate(); if(C.status==="ok"&&C.me) renderMsgs(); }
+function render(){
+  renderRooms();
+  if(C.room===AI){ if(!signedIn()) return gate(`<div class="chat-empty"><b>Ask AI</b><span>Get quick answers about Layover Logbook: roster check, Pro, the crew feed, money and more. Sign in to ask.</span><button class="btn" type="button" data-go="signin">Sign in</button></div>`);
+    gate(""); return renderAi(); }
+  renderGate(); if(C.status==="ok"&&C.me) renderMsgs();
+}
+
+/* ---------- Ask AI ---------- */
+const AI="ai", AI_LOG="lay.aiChat";
+const EXAMPLES=[
+  "How do I read my roster from a screenshot?",
+  "How do I get an invite code for the crew feed?",
+  "What's included in Pro, and how much is it?",
+  "How do I see which days I'm off with crew friends?",
+  "How does the fatigue check work?",
+  "How do I track my allowance and spending?",
+  "How do I add the app to my home screen?",
+  "How do I cancel my subscription?"
+];
+const A={log:ls.get(AI_LOG,[]),busy:false};
+const aiSave=()=>ls.set(AI_LOG,A.log.slice(-30));
+const aiText=t=>linkify(t);
+function renderAi(){
+  const body=$("chatBody");
+  const chips=`<div class="chat-ai-ex">${EXAMPLES.map(q=>`<button type="button" data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div>`;
+  if(!A.log.length&&!A.busy){
+    body.innerHTML=`<div class="chat-ai-hi"><span class="chat-ai-av" aria-hidden="true">✦</span><b>Hi! I'm the Layover Logbook assistant.</b><span>Ask me how anything in the app works. Try one of these:</span></div>${chips}`;
+    return;
+  }
+  let h="";
+  A.log.forEach(m=>{
+    h+=m.role==="user"
+      ?`<div class="chat-msg mine"><div class="chat-bub"><p>${esc(m.content)}</p></div></div>`
+      :`<div class="chat-msg chat-ai"><span class="chat-ai-av" aria-hidden="true">✦</span><div class="chat-bub"><p>${aiText(m.content)}</p></div></div>`;
+  });
+  if(A.busy) h+=`<div class="chat-msg chat-ai"><span class="chat-ai-av" aria-hidden="true">✦</span><div class="chat-bub"><p class="chat-ai-dots" aria-label="Thinking"><i></i><i></i><i></i></p></div></div>`;
+  else h+=`<div class="chat-ai-foot"><button type="button" data-ainew>New chat</button><button type="button" data-aiex>Example questions</button></div>`;
+  body.innerHTML=h; stick();
+}
+function aiCtx(){
+  const c={}; try{ c.city=state.dest&&state.dest.name; }catch(e){}
+  try{ const s=window.LAYOVER_STATE&&LAYOVER_STATE(); c.home=s&&s.home&&s.home.code; }catch(e){}
+  try{ c.pro=!!Plan.pro; }catch(e){}
+  try{ c.tab=document.querySelector(".tabbar [aria-current='page'],.tabbar .on")?.dataset.tab; }catch(e){}
+  return c;
+}
+async function askAi(q){
+  q=String(q||"").trim().slice(0,1000); if(!q||A.busy) return;
+  A.log.push({role:"user",content:q}); A.busy=true; aiSave(); nearBottom=true; renderAi(); $("chatErr").textContent="";
+  let reply="";
+  try{
+    let tok; try{ tok=await validToken(); }catch(e){ tok=null; }
+    if(!tok){ reply="Please sign in again to ask a question."; return; }
+    let r; try{ r=await fetch(SB+"/functions/v1/ask-ai",{method:"POST",headers:{apikey:SBKEY,Authorization:"Bearer "+tok,"Content-Type":"application/json"},
+      body:JSON.stringify({messages:A.log.slice(-12),context:aiCtx()})}); }
+    catch(e){ reply="You're offline. Ask again when you have a connection."; return; }
+    let j=null; try{ j=await r.json(); }catch(e){}
+    if(r.ok&&j&&j.answer){ reply=j.answer; return; }
+    reply=r.status===401?"Please sign in again to ask a question."
+      :r.status===429?`You've asked ${j&&j.limit||30} questions today. Ask AI will be back tomorrow.`
+      :r.status===404?"Ask AI isn't switched on yet. Try again later."
+      :"Ask AI is taking a break right now. Please try again in a little while.";
+  }finally{
+    A.busy=false;
+    if(reply) A.log.push({role:"assistant",content:reply});
+    aiSave(); if(C.open&&C.room===AI) renderAi();
+  }
+}
+$("chatBody").addEventListener("click",e=>{
+  const ask=e.target.closest("[data-ask]"); if(ask){ e.stopImmediatePropagation(); askAi(ask.dataset.ask); return; }
+  if(e.target.closest("[data-ainew]")){ e.stopImmediatePropagation(); A.log=[]; aiSave(); renderAi(); return; }
+  if(e.target.closest("[data-aiex]")){ e.stopImmediatePropagation(); const b=$("chatBody"); b.insertAdjacentHTML("beforeend",`<div class="chat-ai-ex">${EXAMPLES.map(q=>`<button type="button" data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div>`); b.querySelector("[data-aiex]")?.remove(); nearBottom=true; stick(); return; }
+  if(C.room===AI) e.stopImmediatePropagation();   /* no delete/report on AI bubbles */
+});
+document.head.insertAdjacentHTML("beforeend",`<style>
+.chat-rooms .chat-ai-tab{background:linear-gradient(150deg,#2A1E52,#B0136E);color:#fff;border-color:transparent}
+.chat-rooms .chat-ai-tab[aria-selected="true"]{background:linear-gradient(150deg,#B0136E,#F0B429);color:#fff;border-color:transparent}
+.chat-ai-av{width:28px;height:28px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:.85rem;color:#fff;background:linear-gradient(150deg,#2A1E52,#B0136E)}
+.chat-ai-hi{display:grid;justify-items:center;gap:6px;text-align:center;padding:14px 10px 6px;color:var(--muted)}
+.chat-ai-hi .chat-ai-av{width:44px;height:44px;font-size:1.2rem}
+.chat-ai-hi b{color:var(--ink);font-family:var(--display);font-size:1.25rem;font-weight:800}
+.chat-ai-ex{display:flex;flex-direction:column;gap:6px;padding:6px 0 4px}
+.chat-ai-ex button,.chat-ai-foot button{text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:14px;padding:9px 12px;font:inherit;font-size:.875rem;line-height:1.3;cursor:pointer}
+.chat-ai-ex button:active,.chat-ai-foot button:active{background:var(--sub)}
+.chat-ai-foot{display:flex;gap:6px;justify-content:center;padding:8px 0 2px}
+.chat-ai-foot button{border-radius:999px;padding:6px 12px;font-size:.75rem;font-weight:700;color:var(--muted)}
+.chat-ai-dots{display:flex;gap:4px;padding:6px 2px}
+.chat-ai-dots i{width:7px;height:7px;border-radius:50%;background:var(--muted);opacity:.4}
+@media (prefers-reduced-motion:no-preference){.chat-ai-dots i{animation:aidot 1s infinite}.chat-ai-dots i:nth-child(2){animation-delay:.15s}.chat-ai-dots i:nth-child(3){animation-delay:.3s}}
+@keyframes aidot{50%{opacity:1;transform:translateY(-2px)}}
+</style>`);
 
 /* ---------- unread ---------- */
 const unreadIn=r=>(C.msgs[r]||[]).filter(m=>!m.mine&&m.id>(seen[r]||0)).length;
@@ -153,16 +248,16 @@ async function poll(){
       if(r.status===404){ C.status="missing"; show(false); C.timer=setTimeout(poll,5*60e3); return; } }catch(e){} }
     C.status="signedout"; show(true); if(C.open) render(); C.timer=setTimeout(poll,8000); return; }
   try{
-    const rs=C.open?[C.room]:rooms().map(r=>r.id);
+    const rs=C.open&&C.room!==AI?[C.room]:rooms().map(r=>r.id);
     let changed=0; for(const r of rs) changed+=await load(r,!C.msgs[r]);
     const was=C.status; C.status="ok"; show(true);
-    if(C.open){ if(changed||was!=="ok") render(); markSeen(); } else { renderRooms(); badge(); }
+    if(C.open&&C.room!==AI){ if(changed||was!=="ok") render(); markSeen(); } else { if(!C.open||!A.busy) renderRooms(); badge(); }
   }catch(e){
     if(e.kind==="missing"){ C.status="missing"; show(false); C.timer=setTimeout(poll,5*60e3); return; }
     C.status=e.kind==="notcrew"?"notcrew":e.kind==="offline"?"offline":e.kind==="signin"?"signedout":C.status;
-    show(true); if(C.open) render();
+    show(true); if(C.open&&C.room!==AI) render();
   }
-  C.timer=setTimeout(poll,C.open&&!document.hidden?4000:document.hidden?120e3:45e3);
+  C.timer=setTimeout(poll,C.open&&C.room!==AI&&!document.hidden?4000:document.hidden?120e3:45e3);
 }
 function show(on){ wrap.hidden=!on; }
 
@@ -181,6 +276,7 @@ window.LayoverChat={open:openChat,close:closeChat};
 $("chatRooms").addEventListener("click",async e=>{
   const b=e.target.closest("[data-room]"); if(!b||b.dataset.room===C.room) return;
   C.room=b.dataset.room; ls.set("lay.chatRoom",C.room); C.sel=null; nearBottom=true; render();
+  if(C.room===AI) return;
   try{ await load(C.room,!C.msgs[C.room]); render(); markSeen(); }catch(err){}
 });
 $("chatGate").addEventListener("click",e=>{
@@ -226,6 +322,7 @@ $("chatPrevX").addEventListener("click",clearPhoto);
 $("chatForm").addEventListener("submit",async e=>{
   e.preventDefault(); if(C.busy) return;
   const t=ta.value.trim();
+  if(C.room===AI){ if(t){ ta.value=""; grow(); askAi(t); } return; }
   if(!t&&!C.photo) return;
   if((t.match(/(https?:\/\/|www\.)/gi)||[]).length>1){ $("chatErr").textContent="Messages can contain at most one link."; return; }
   C.busy=true; $("chatSend").disabled=true; $("chatErr").textContent="";
