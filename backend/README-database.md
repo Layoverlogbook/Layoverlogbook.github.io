@@ -27,3 +27,12 @@ Floating chat for invited crew (`chat.js`). Rooms: `lounge` and `city:<destinati
 - Functions (signed-in crew only, checked with `_crew_only()`): `crew_chat_send`, `crew_chat_list`, `crew_chat_delete` (own messages, owners any), `crew_chat_report`.
 - Limits: 8 messages a minute, one link per message, no repeats within 30 seconds.
 - The app keeps the chat bubble hidden until these functions exist.
+
+## Connect your AI: MCP server (migrations `ai_keys_for_mcp`, `ai_key_create_plain_error`; Edge Function `mcp`)
+Pro feature. Lets an AI assistant (Claude, ChatGPT, Cursor, any MCP app) read the user's own logbook and add expenses or wishlist items.
+- `ai_keys`: one row per key: name, SHA-256 fingerprint of the key (never the key itself), last 4 characters, last use, a per-minute call counter. RLS on with no policies.
+- `ai_key_create(p_name)`, `ai_key_list()`, `ai_key_revoke(p_id)`: called by the app (Notebook → Connect your AI). Creating needs Pro when the paywall is on; up to 5 keys per user.
+- `ai_resolve(p_hash)`, `ai_tx_add(p_uid, p_item)`, `ai_wish_add(p_uid, p_code, p_item)`: service role only, used by the Edge Function. Writes are atomic appends to `user_data`, tagged `via:"ai"` with a time `at`, so the app merges them in before it next saves (see `mergeAI` in app.html).
+- Edge Function `mcp` (`backend/mcp.ts`, JWT verification off, it checks the key itself): Model Context Protocol over HTTP at
+  `https://zzgtxastnmxzffygdkrg.supabase.co/functions/v1/mcp`. Key as `Authorization: Bearer llb_...` or `?key=llb_...`. 120 calls a minute per key.
+- Tools: get_overview, list_layovers, get_layover_plan, spending_summary, list_expenses, add_expense, get_city_notes, add_wishlist_item.

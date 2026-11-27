@@ -379,6 +379,24 @@ footer p{max-width:70ch}
 .m-date{width:40px;flex:none;border-radius:9px;overflow:hidden;text-align:center;background:#fff;box-shadow:0 2px 0 #D3DEE5,0 8px 12px -8px rgba(19,35,63,.6);transform:perspective(200px) rotateX(12deg)}
 .m-date small{display:block;background:var(--airway);color:#fff;font-size:.5rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;line-height:13px}
 .m-date b{font:800 1.25rem/26px var(--display)!important}
+/* ask your AI */
+.m-chat{display:flex;flex-direction:column;gap:.5rem;padding:0 .7rem}
+.m-chat p{max-width:86%;padding:.55rem .75rem;border-radius:14px;line-height:1.35;font-size:.78rem;color:var(--ink)}
+.m-chat .me{align-self:flex-end;background:var(--ink);color:var(--paper);border-bottom-right-radius:4px}
+.m-chat .bot{align-self:flex-start;background:var(--paper);border:1px solid #D3DEE5;border-bottom-left-radius:4px}
+.m-chat .tool{align-self:flex-start;font-size:.68rem;color:var(--haze);padding:0 .2rem;background:none}
+.ai-works{margin-top:1.4rem;display:flex;flex-wrap:wrap;gap:.5rem}
+.ai-works span{border:1px solid var(--line);border-radius:999px;padding:.3rem .8rem;font-size:.85rem;font-weight:700;color:var(--ink-2);background:var(--paper)}
+/* faq */
+.faq{padding:5rem 0;border-top:1px solid var(--line)}
+.faq h2{font:800 clamp(2.4rem,5vw,4rem)/.95 var(--display);margin-bottom:2rem}
+.faq-list{display:grid;gap:.75rem;max-width:52rem}
+.faq details{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:1rem 1.25rem}
+.faq summary{cursor:pointer;font-weight:700;font-size:1.08rem;list-style:none;display:flex;justify-content:space-between;gap:1rem}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-size:1.4rem;line-height:1;color:var(--airway)}
+.faq details[open] summary::after{content:"−"}
+.faq details p{margin-top:.7rem;color:var(--ink-2);max-width:46rem}
 </style>
 </head>
 <body>
@@ -396,6 +414,7 @@ footer p{max-width:70ch}
       <li><a href="#features">Features</a></li>
       <li><a href="#together">Off together</a></li>
       <li><a href="#crew">Crew feed</a></li>
+      <li><a href="#ai">Ask your AI</a></li>
       <li><a href="#pricing">Pricing</a></li>
       <li><a href="#install">Install</a></li>
     </ul>
@@ -617,6 +636,37 @@ footer p{max-width:70ch}
   </div>
 </section>
 
+<section class="feature" id="ai">
+  <div class="wrap">
+    <div class="text">
+      <span class="new-badge">New</span> <span class="pro-badge">PRO</span>
+      <h3>Ask your AI about your next layover</h3>
+      <p>Connect Layover Logbook to Claude, ChatGPT or another AI assistant. Ask how much free time you'll have in London, what you spent in Bangkok this month, or just say "add £18 for dinner" and it's in your Money tab on every phone.</p>
+      <ul class="ticks">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Your free-time window, rest and body clock for any saved layover</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Spending by category or city, and how much allowance you kept</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Log expenses and wishlist items by chatting</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Private: one key per assistant, only your own data, remove a key any time</li>
+      </ul>
+      <div class="ai-works" aria-label="Works with"><span>Claude</span><span>ChatGPT</span><span>Cursor</span><span>Any MCP app</span></div>
+      <p class="small-print">Part of Pro. In the app: Notebook, then Connect your AI. Built on the open Model Context Protocol (MCP).</p>
+    </div>
+    <div class="phone" aria-hidden="true">
+      <div class="screen">
+        <div class="screen-top"><b>Your assistant</b><span class="chip">LHR</span></div>
+        <div class="m-chat">
+          <p class="me">How much free time do I get in London tomorrow?</p>
+          <p class="tool">Layover Logbook · layover plan</p>
+          <p class="bot">You land at 15:25 local and pickup is 16:25 the next day. After transfer, 10 h rest and getting ready, you have <b>12.5 h free</b>, from 02:25 to 14:55. Your body clock is 3 h ahead, so a late breakfast is the sweet spot.</p>
+          <p class="me">Add £18 for dinner with the crew</p>
+          <p class="tool">Layover Logbook · add expense</p>
+          <p class="bot">Saved: 18 GBP on food in London, about 84 QAR. You've kept 474 QAR of your allowance so far.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="pricing" id="pricing">
   <div class="wrap">
     <div class="sec-head">
@@ -651,6 +701,7 @@ footer p{max-width:70ch}
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Off together: connect rosters privately with crew friends, find your days off together</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Fatigue dashboard with trip-by-trip charts</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Money insights and Excel export</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Connect your AI: ask Claude or ChatGPT about your layovers and log expenses by chat</li>
         </ul>
         <a class="btn" href="app.html?upgrade">Get Pro</a>
       </div>
@@ -669,6 +720,23 @@ footer p{max-width:70ch}
     </ol>
     <p class="win-note">On Android, open the downloaded file and allow your browser to install apps if asked. On Windows, the first time you open the app Windows may say "Windows protected your PC". Click More info, then Run anyway.</p>
   </div>
+</section>
+
+<section class="faq" id="faq">
+  <div class="wrap">
+    <h2>Questions crew ask</h2>
+    <div class="faq-list">
+      <details><summary>Is Layover Logbook made by my airline?</summary><p>No. It&#x27;s an independent app made by cabin crew, for crew of any airline. It isn&#x27;t affiliated with any airline, and your airline doesn&#x27;t see anything you save.</p></details>
+      <details><summary>Who can see my data?</summary><p>Only you. Your layovers, money and notes are private to your account. In the crew feed, only crew who joined with an invite code see posts, and location data is removed from photos before upload. In Off together, friends you connect with see only your day types (off, duty, away), never flights, routes or times.</p></details>
+      <details><summary>Do I need an account?</summary><p>No. You can use the app as a guest and everything stays on your phone. A free account keeps your data safe and in step across your devices, and is needed for the crew feed and Pro.</p></details>
+      <details><summary>How does Roster check read my roster?</summary><p>You upload a screenshot of your roster. It is read once to build your calendar and check flight time limits and fatigue, then the picture isn&#x27;t kept. Always check the result against your roster: it&#x27;s a planning guide, and your company&#x27;s scheme comes first.</p></details>
+      <details><summary>Are the fatigue scores official?</summary><p>No. They are a planning guide based on public flight time rules and how many time zones and night flights you&#x27;ve had. They are not medical advice and don&#x27;t replace your airline&#x27;s rules or your own judgement.</p></details>
+      <details><summary>What does Connect your AI do?</summary><p>It lets an AI assistant like Claude or ChatGPT read your own layovers and spending, and add expenses or wishlist items when you ask. You create a private key in the app (Notebook, then Connect your AI) and can remove it at any time. The assistant never sees the crew feed or your friends. Part of Pro.</p></details>
+      <details><summary>Do I need to download anything?</summary><p>No. Open the app in Safari or Chrome and add it to your home screen. It works like a normal app, even offline. There are also Android and Windows versions if you prefer.</p></details>
+      <details><summary>Can I cancel Pro?</summary><p>Yes, any time, and you keep Pro until the end of the period you paid for. If you change your mind within 14 days, you get a full refund. Payments are handled by Paddle.</p></details>
+    </div>
+  </div>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is Layover Logbook made by my airline?", "acceptedAnswer": {"@type": "Answer", "text": "No. It's an independent app made by cabin crew, for crew of any airline. It isn't affiliated with any airline, and your airline doesn't see anything you save."}}, {"@type": "Question", "name": "Who can see my data?", "acceptedAnswer": {"@type": "Answer", "text": "Only you. Your layovers, money and notes are private to your account. In the crew feed, only crew who joined with an invite code see posts, and location data is removed from photos before upload. In Off together, friends you connect with see only your day types (off, duty, away), never flights, routes or times."}}, {"@type": "Question", "name": "Do I need an account?", "acceptedAnswer": {"@type": "Answer", "text": "No. You can use the app as a guest and everything stays on your phone. A free account keeps your data safe and in step across your devices, and is needed for the crew feed and Pro."}}, {"@type": "Question", "name": "How does Roster check read my roster?", "acceptedAnswer": {"@type": "Answer", "text": "You upload a screenshot of your roster. It is read once to build your calendar and check flight time limits and fatigue, then the picture isn't kept. Always check the result against your roster: it's a planning guide, and your company's scheme comes first."}}, {"@type": "Question", "name": "Are the fatigue scores official?", "acceptedAnswer": {"@type": "Answer", "text": "No. They are a planning guide based on public flight time rules and how many time zones and night flights you've had. They are not medical advice and don't replace your airline's rules or your own judgement."}}, {"@type": "Question", "name": "What does Connect your AI do?", "acceptedAnswer": {"@type": "Answer", "text": "It lets an AI assistant like Claude or ChatGPT read your own layovers and spending, and add expenses or wishlist items when you ask. You create a private key in the app (Notebook, then Connect your AI) and can remove it at any time. The assistant never sees the crew feed or your friends. Part of Pro."}}, {"@type": "Question", "name": "Do I need to download anything?", "acceptedAnswer": {"@type": "Answer", "text": "No. Open the app in Safari or Chrome and add it to your home screen. It works like a normal app, even offline. There are also Android and Windows versions if you prefer."}}, {"@type": "Question", "name": "Can I cancel Pro?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, any time, and you keep Pro until the end of the period you paid for. If you change your mind within 14 days, you get a full refund. Payments are handled by Paddle."}}]}</script>
 </section>
 
 <section class="last">
