@@ -8,7 +8,7 @@ const SITES = [
   "https://layoverlogbook.github.io/app.html",
   "https://karawene112.github.io/layover/app.html"
 ];
-const OUR_HOSTS = ["layoverlogbook.github.io", "karawene112.github.io"];
+const OUR_HOSTS = ["layoverlogbook.com", "www.layoverlogbook.com", "layoverlogbook.github.io", "karawene112.github.io"];
 // Payment and sign-in pages that must open inside the app window
 const INSIDE_HOSTS = ["paddle.com", "paddle.io", "supabase.co"];
 

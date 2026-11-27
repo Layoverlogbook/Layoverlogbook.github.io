@@ -4,7 +4,7 @@
   "version": "2.1.0",
   "description": "The layover app for airline crew",
   "author": "Layover Logbook",
-  "homepage": "https://layoverlogbook.github.io",
+  "homepage": "https://layoverlogbook.com",
   "main": "main.js",
   "private": true,
   "scripts": {
