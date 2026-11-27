@@ -50,7 +50,7 @@
 <style>
 :root{
   --sky:#DCE6EB; --paper:#F3F7F9; --ink:#13233F; --ink-2:#2E4363;
-  --airway:#B0136E; --beacon:#F0B429; --haze:#6E8496; --line:#C3D1D9;
+  --ember:#BF3F0A; --ember-lite:#F28C38; --airway:#B0136E; --beacon:#F0B429; --haze:#6E8496; --line:#C3D1D9;
   --display:"Big Shoulders Display",Impact,sans-serif;
   --body:"Atkinson Hyperlegible",system-ui,sans-serif;
   --wrap:min(1180px,100% - 2.5rem);
@@ -398,6 +398,10 @@ footer p{max-width:70ch}
 .faq summary::after{content:"+";font-size:1.4rem;line-height:1;color:var(--airway)}
 .faq details[open] summary::after{content:"−"}
 .faq details p{margin-top:.7rem;color:var(--ink-2);max-width:46rem}
+/* body clock accent: the app's signature idea */
+.bc{color:var(--ember);font-weight:800}
+h1 .bc{color:#D9480F}
+.bc-lite{color:var(--ember-lite)!important;font-weight:800}
 </style>
 </head>
 <body>
@@ -435,14 +439,14 @@ footer p{max-width:70ch}
         <svg viewBox="0 0 120 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h100" stroke-dasharray="3 6" stroke-linecap="round"/><path d="M104 12l-8-6v12z" fill="currentColor" stroke="none"/></svg>
         <div><b id="p3To">LHR</b><small id="p3ToN">London</small></div>
       </div>
-      <div class="p3-grid"><span>Local<b id="p3Local">--:--</b></span><span>Vs base<b id="p3Diff">--</b></span><span>Body clock<b id="p3Body">--</b></span></div>
+      <div class="p3-grid"><span>Local<b id="p3Local">--:--</b></span><span>Vs base<b id="p3Diff">--</b></span><span class="bc-lite">Body clock<b id="p3Body">--</b></span></div>
     </div>
     <div class="p3-stub"><span class="barcode"></span><span>Tap a city below</span></div>
     <div class="p3-glare"></div>
   </div></div></div>
   <div class="wrap">
     <div class="hero-copy">
-      <h1>Every layover, planned around your body clock.</h1>
+      <h1>Every layover, planned around your <span class="bc">body clock</span>.</h1>
       <p class="lede">Your free time, your rest, your allowance, and the places crew actually go. Built by cabin crew, for crew of any airline.</p>
       <div class="cta">
         <a class="btn btn-ink" href="app.html">Start free</a>
@@ -467,7 +471,7 @@ footer p{max-width:70ch}
     </div>
     <div class="board">
       <table>
-        <thead><tr><th scope="col">Code</th><th scope="col">City</th><th scope="col">Local</th><th scope="col">Vs base</th><th scope="col">Body clock</th><th scope="col"><span class="sr">Show on globe</span></th></tr></thead>
+        <thead><tr><th scope="col">Code</th><th scope="col">City</th><th scope="col">Local</th><th scope="col">Vs base</th><th scope="col" class="bc-lite">Body clock</th><th scope="col"><span class="sr">Show on globe</span></th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
     </div>
@@ -481,7 +485,7 @@ footer p{max-width:70ch}
       <h3>Land, open the app, know what to do</h3>
       <p>Enter arrival and pickup. The app takes away transfer and rest, and shows the hours that are really yours. Then it shows you a postcard of where you are, and ideas that fit how awake you feel.</p>
       <ul class="ticks">
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Local time, home time and body clock side by side</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg><span>Local time, home time and <span class="bc">body clock</span> side by side</span></li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Ideas for the city that fit how awake you are</li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Nearby food, transport and weather from where you stay</li>
       </ul>
@@ -644,7 +648,7 @@ footer p{max-width:70ch}
       <h3>Ask your AI about your next layover</h3>
       <p>Connect Layover Logbook to Claude, ChatGPT or another AI assistant. Ask how much free time you'll have in London, what you spent in Bangkok this month, or just say "add £18 for dinner" and it's in your Money tab on every phone.</p>
       <ul class="ticks">
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Your free-time window, rest and body clock for any saved layover</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg><span>Your free-time window, rest and <span class="bc">body clock</span> for any saved layover</span></li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Spending by category or city, and how much allowance you kept</li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Log expenses and wishlist items by chatting</li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Private: one key per assistant, only your own data, remove a key any time</li>
@@ -658,7 +662,7 @@ footer p{max-width:70ch}
         <div class="m-chat">
           <p class="me">How much free time do I get in London tomorrow?</p>
           <p class="tool">Layover Logbook · layover plan</p>
-          <p class="bot">You land at 15:25 local and pickup is 16:25 the next day. After transfer, 10 h rest and getting ready, you have <b>12.5 h free</b>, from 02:25 to 14:55. Your body clock is 3 h ahead, so a late breakfast is the sweet spot.</p>
+          <p class="bot">You land at 15:25 local and pickup is 16:25 the next day. After transfer, 10 h rest and getting ready, you have <b>12.5 h free</b>, from 02:25 to 14:55. Your <span class="bc">body clock</span> is 3 h ahead, so a late breakfast is the sweet spot.</p>
           <p class="me">Add £18 for dinner with the crew</p>
           <p class="tool">Layover Logbook · add expense</p>
           <p class="bot">Saved: 18 GBP on food in London, about 84 QAR. You've kept 474 QAR of your allowance so far.</p>
@@ -683,7 +687,7 @@ footer p{max-width:70ch}
         <div class="price">$0</div>
         <p class="note">Everything you need on a layover. No card needed.</p>
         <ul>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Free-time planner, body clock and fatigue check</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg><span>Free-time planner, <span class="bc">body clock</span> and fatigue check</span></li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Nearby places, weather and city essentials</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Spending in any currency</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Notes, wishlist and journal, synced to your account</li>
