@@ -222,7 +222,7 @@ function renderMe(){
   el("tgMeOff").textContent=ahead.length?`${ahead.filter(k=>FREE(days[k])).length} days off ahead`:"";
   if(document.activeElement!==el("tgName")) el("tgName").value=me.name||"";
   el("tgSignIn").hidden=signedIn();
-  if(!cloudOn()){ el("tgSignIn").querySelector("p").textContent="Sharing rosters needs the online app at layoverlogbook.github.io."; el("tgSignBtn").hidden=true; }
+  if(!cloudOn()){ el("tgSignIn").querySelector("p").textContent="Sharing rosters needs the online app at layoverlogbook.com."; el("tgSignBtn").hidden=true; }
   el("tgRead").disabled=!files.length||busy;
 }
 function renderShare(){

@@ -39,17 +39,22 @@
     }
     this.ll = ll;
 
-    /* night-chart sphere */
-    world.add(new T.Mesh(new T.SphereGeometry(R, 56, 40), new T.ShaderMaterial({
-      uniforms: { a: { value: new T.Color("#2A4470") }, b: { value: new T.Color("#0E1B33") }, rim: { value: new T.Color("#E2589F") } },
-      vertexShader: "varying vec3 vN; void main(){ vN=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-      fragmentShader: "uniform vec3 a; uniform vec3 b; uniform vec3 rim; varying vec3 vN; void main(){ float f=clamp(dot(vN,normalize(vec3(-.4,.5,1.))),0.,1.); vec3 c=mix(b,a,pow(f,1.4)); float r=pow(1.-max(vN.z,0.),2.5); c=mix(c,rim,r*.35); gl_FragColor=vec4(c,1.); }"
+    /* realistic Earth: NASA Blue Marble (public domain), sun shading, ocean shine, blue atmosphere */
+    var earthU = { map: { value: null }, water: { value: null }, ready: { value: 0 } };
+    world.add(new T.Mesh(new T.SphereGeometry(R, 96, 64), new T.ShaderMaterial({ uniforms: earthU,
+      vertexShader: "varying vec3 vN; varying vec2 vUv; void main(){ vUv=uv; vN=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
+      fragmentShader: "uniform sampler2D map; uniform sampler2D water; uniform float ready; varying vec3 vN; varying vec2 vUv; void main(){ vec3 base=mix(vec3(.04,.11,.24),texture2D(map,vUv).rgb,ready); vec3 L=normalize(vec3(-.35,.45,1.)); float d=max(dot(vN,L),0.); vec3 c=base*(.28+.95*d); float w=ready*texture2D(water,vUv).r; vec3 H=normalize(L+vec3(0.,0.,1.)); c+=vec3(.85,.92,1.)*pow(max(dot(vN,H),0.),38.)*w*.5; float r=pow(1.-max(vN.z,0.),3.); c=mix(c,vec3(.42,.66,1.),r*.5); gl_FragColor=vec4(c,1.); }"
     })));
+    (function () {
+      var tl = new T.TextureLoader(), n = 0, done = function () { if (++n === 2) { earthU.ready.value = 1; if (self.kick) self.kick(); } };
+      tl.load("earth.jpg", function (t) { t.anisotropy = renderer.capabilities.getMaxAnisotropy(); earthU.map.value = t; done(); });
+      tl.load("earth-water.png", function (t) { earthU.water.value = t; done(); });
+    })();
     /* atmosphere glow */
     world.add(new T.Mesh(new T.SphereGeometry(R * 1.16, 48, 32), new T.ShaderMaterial({
-      side: T.BackSide, transparent: true, depthWrite: false, blending: T.AdditiveBlending,
+      side: T.BackSide, transparent: true, depthWrite: false,
       vertexShader: "varying vec3 vN; void main(){ vN=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-      fragmentShader: "varying vec3 vN; void main(){ float i=pow(clamp(-vN.z*1.6,0.,1.),2.); gl_FragColor=vec4(mix(vec3(.31,.49,.84),vec3(.89,.35,.62),.35)*i*1.1,1.); }"
+      fragmentShader: "varying vec3 vN; void main(){ float i=pow(clamp(-vN.z*1.6,0.,1.),2.); gl_FragColor=vec4(.35,.6,1.,i*.6); }"
     })));
     /* a few stars behind it */
     (function () {
@@ -61,11 +66,6 @@
       var sg = new T.BufferGeometry(); sg.setAttribute("position", new T.Float32BufferAttribute(st, 3));
       scene.add(new T.Points(sg, new T.PointsMaterial({ color: 0xC9D7E6, size: 0.05, transparent: true, opacity: 0.55, depthWrite: false })));
     })();
-    var g = [];
-    for (var la = -75; la <= 75; la += 15) for (var lo = -180; lo < 180; lo += 4) g.push(ll(la, lo, R * 1.001), ll(la, lo + 4, R * 1.001));
-    for (var lo2 = -180; lo2 < 180; lo2 += 15) for (var la2 = -86; la2 < 86; la2 += 4) g.push(ll(la2, lo2, R * 1.001), ll(la2 + 4, lo2, R * 1.001));
-    world.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(g), new T.LineBasicMaterial({ color: 0x9FB2C6, transparent: true, opacity: 0.12 })));
-
     function tex(fill, ring) {
       var c = document.createElement("canvas"); c.width = c.height = 64; var x = c.getContext("2d");
       x.beginPath(); x.arc(32, 32, ring ? 24 : 28, 0, Math.PI * 2); x.fillStyle = fill; x.fill();

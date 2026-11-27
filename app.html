@@ -173,20 +173,20 @@ window.LAYOVER_WEB=true;
 <meta name="theme-color" content="#13233F">
 <meta name="description" content="Plan rest and free time, find places nearby, track spending and allowance, and check fatigue and your roster on every layover.">
 <meta name="robots" content="index, follow, max-image-preview:large">
-<link rel="canonical" href="https://layoverlogbook.github.io/app.html">
+<link rel="canonical" href="https://layoverlogbook.com/app.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Layover Logbook">
 <meta property="og:title" content="Layover Logbook – App for airline crew">
 <meta property="og:description" content="Plan rest and free time, find places nearby, track spending and allowance, and check fatigue and your roster on every layover.">
-<meta property="og:url" content="https://layoverlogbook.github.io/app.html">
-<meta property="og:image" content="https://layoverlogbook.github.io/og-layover.jpg">
+<meta property="og:url" content="https://layoverlogbook.com/app.html">
+<meta property="og:image" content="https://layoverlogbook.com/og-layover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Layover Logbook – App for airline crew">
 <meta name="twitter:description" content="Plan rest and free time, find places nearby, track spending and allowance, and check fatigue and your roster on every layover.">
-<meta name="twitter:image" content="https://layoverlogbook.github.io/og-layover.jpg">
+<meta name="twitter:image" content="https://layoverlogbook.com/og-layover.jpg">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -4777,4 +4777,25 @@ window.RosterCheck={reload(){ roster=lsGet("lay.roster",[]); viewMonth=null; sel
 <script src="together.js"></script>
 <script src="chat.js"></script>
 <script src="fx3d.js"></script>
+<script>
+/* The website moved to layoverlogbook.com. On the old github.io address, point people there.
+   The installed Android and Windows apps keep using this address until they update, so they get no notice. */
+(function(){
+  if(!/\.github\.io$/.test(location.hostname)||/LayoverLogbookAndroid/.test(navigator.userAgent)) return;
+  try{ if(sessionStorage.getItem("lay.movedNote")) return; }catch(e){}
+  var signed=false; try{ signed=!!JSON.parse(localStorage.getItem("lay.session")||"null"); }catch(e){}
+  var hasGuestData=false; try{ hasGuestData=["lay.trips","lay.tx","lay.wish","lay.tips"].some(function(k){ var v=localStorage.getItem(k); return v&&v!=="[]"&&v!=="{}"; }); }catch(e){}
+  var b=document.createElement("div");
+  b.setAttribute("role","status");
+  b.style.cssText="position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 10px);z-index:9999;background:#13233F;color:#F3F7F9;border-radius:14px;padding:12px 14px;font:500 14px/1.4 system-ui,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.3);display:grid;gap:8px;max-width:560px;margin:0 auto";
+  var msg=signed?"Layover Logbook has a new home: layoverlogbook.com. Sign in there with the same account, and everything is waiting for you."
+    :hasGuestData?"Layover Logbook has a new home: layoverlogbook.com. Your data is saved on this phone only. To take it with you, create a free account here first (Notebook, Account and data), then sign in there."
+    :"Layover Logbook has a new home: layoverlogbook.com.";
+  b.innerHTML='<span></span><span style="display:flex;gap:8px;flex-wrap:wrap"><a style="background:#F0B429;color:#13233F;padding:7px 14px;border-radius:999px;font-weight:700;text-decoration:none">Go to layoverlogbook.com</a><button type="button" style="background:none;border:1px solid rgba(255,255,255,.4);color:inherit;padding:7px 14px;border-radius:999px;font:inherit">Later</button></span>';
+  b.firstChild.textContent=msg;
+  b.querySelector("a").href="https://layoverlogbook.com/app.html";
+  b.querySelector("button").onclick=function(){ b.remove(); try{ sessionStorage.setItem("lay.movedNote","1"); }catch(e){} };
+  document.body.appendChild(b);
+})();
+</script>
 </html>

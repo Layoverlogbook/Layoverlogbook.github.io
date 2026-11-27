@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>if(/\.github\.io$/.test(location.hostname))location.replace("https://layoverlogbook.com"+location.pathname.replace(/^\/layover/,"")+location.search+location.hash)</script>
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <script>if(location.protocol==="http:"&&!/^(localhost|127\.0\.0\.1)$/.test(location.hostname))location.replace("https:"+location.href.slice(5))</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,20 +25,20 @@
 <meta name="theme-color" content="#13233F">
 <meta name="description" content="Plan every layover around your body clock, check your roster against flight time limits, track your allowance and see where crew go. Free for any airline.">
 <meta name="robots" content="index, follow, max-image-preview:large">
-<link rel="canonical" href="https://layoverlogbook.github.io/">
+<link rel="canonical" href="https://layoverlogbook.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Layover Logbook">
 <meta property="og:title" content="Layover Logbook – The layover app for airline crew">
 <meta property="og:description" content="Plan every layover around your body clock, check your roster against flight time limits, track your allowance and see where crew go. Free for any airline.">
-<meta property="og:url" content="https://layoverlogbook.github.io/">
-<meta property="og:image" content="https://layoverlogbook.github.io/og-layover.jpg">
+<meta property="og:url" content="https://layoverlogbook.com/">
+<meta property="og:image" content="https://layoverlogbook.com/og-layover.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Layover Logbook – The layover app for airline crew">
 <meta name="twitter:description" content="Plan every layover around your body clock, check your roster against flight time limits, track your allowance and see where crew go. Free for any airline.">
-<meta name="twitter:image" content="https://layoverlogbook.github.io/og-layover.jpg">
+<meta name="twitter:image" content="https://layoverlogbook.com/og-layover.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Big+Shoulders+Display:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -49,7 +50,7 @@
 <style>
 :root{
   --sky:#DCE6EB; --paper:#F3F7F9; --ink:#13233F; --ink-2:#2E4363;
-  --airway:#B0136E; --beacon:#F0B429; --haze:#6E8496; --line:#C3D1D9;
+  --ember:#BF3F0A; --ember-lite:#F28C38; --airway:#B0136E; --beacon:#F0B429; --haze:#6E8496; --line:#C3D1D9;
   --display:"Big Shoulders Display",Impact,sans-serif;
   --body:"Atkinson Hyperlegible",system-ui,sans-serif;
   --wrap:min(1180px,100% - 2.5rem);
@@ -397,6 +398,10 @@ footer p{max-width:70ch}
 .faq summary::after{content:"+";font-size:1.4rem;line-height:1;color:var(--airway)}
 .faq details[open] summary::after{content:"−"}
 .faq details p{margin-top:.7rem;color:var(--ink-2);max-width:46rem}
+/* body clock accent: the app's signature idea */
+.bc{color:var(--ember);font-weight:800}
+h1 .bc{color:#D9480F}
+.bc-lite{color:var(--ember-lite)!important;font-weight:800}
 </style>
 </head>
 <body>
@@ -434,14 +439,14 @@ footer p{max-width:70ch}
         <svg viewBox="0 0 120 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h100" stroke-dasharray="3 6" stroke-linecap="round"/><path d="M104 12l-8-6v12z" fill="currentColor" stroke="none"/></svg>
         <div><b id="p3To">LHR</b><small id="p3ToN">London</small></div>
       </div>
-      <div class="p3-grid"><span>Local<b id="p3Local">--:--</b></span><span>Vs base<b id="p3Diff">--</b></span><span>Body clock<b id="p3Body">--</b></span></div>
+      <div class="p3-grid"><span>Local<b id="p3Local">--:--</b></span><span>Vs base<b id="p3Diff">--</b></span><span class="bc-lite">Body clock<b id="p3Body">--</b></span></div>
     </div>
     <div class="p3-stub"><span class="barcode"></span><span>Tap a city below</span></div>
     <div class="p3-glare"></div>
   </div></div></div>
   <div class="wrap">
     <div class="hero-copy">
-      <h1>Every layover, planned around your body clock.</h1>
+      <h1>Every layover, planned around your <span class="bc">body clock</span>.</h1>
       <p class="lede">Your free time, your rest, your allowance, and the places crew actually go. Built by cabin crew, for crew of any airline.</p>
       <div class="cta">
         <a class="btn btn-ink" href="app.html">Start free</a>
@@ -466,7 +471,7 @@ footer p{max-width:70ch}
     </div>
     <div class="board">
       <table>
-        <thead><tr><th scope="col">Code</th><th scope="col">City</th><th scope="col">Local</th><th scope="col">Vs base</th><th scope="col">Body clock</th><th scope="col"><span class="sr">Show on globe</span></th></tr></thead>
+        <thead><tr><th scope="col">Code</th><th scope="col">City</th><th scope="col">Local</th><th scope="col">Vs base</th><th scope="col" class="bc-lite">Body clock</th><th scope="col"><span class="sr">Show on globe</span></th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
     </div>
@@ -480,7 +485,7 @@ footer p{max-width:70ch}
       <h3>Land, open the app, know what to do</h3>
       <p>Enter arrival and pickup. The app takes away transfer and rest, and shows the hours that are really yours. Then it shows you a postcard of where you are, and ideas that fit how awake you feel.</p>
       <ul class="ticks">
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Local time, home time and body clock side by side</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg><span>Local time, home time and <span class="bc">body clock</span> side by side</span></li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Ideas for the city that fit how awake you are</li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Nearby food, transport and weather from where you stay</li>
       </ul>
@@ -643,7 +648,7 @@ footer p{max-width:70ch}
       <h3>Ask your AI about your next layover</h3>
       <p>Connect Layover Logbook to Claude, ChatGPT or another AI assistant. Ask how much free time you'll have in London, what you spent in Bangkok this month, or just say "add £18 for dinner" and it's in your Money tab on every phone.</p>
       <ul class="ticks">
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Your free-time window, rest and body clock for any saved layover</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg><span>Your free-time window, rest and <span class="bc">body clock</span> for any saved layover</span></li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Spending by category or city, and how much allowance you kept</li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Log expenses and wishlist items by chatting</li>
         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Private: one key per assistant, only your own data, remove a key any time</li>
@@ -657,7 +662,7 @@ footer p{max-width:70ch}
         <div class="m-chat">
           <p class="me">How much free time do I get in London tomorrow?</p>
           <p class="tool">Layover Logbook · layover plan</p>
-          <p class="bot">You land at 15:25 local and pickup is 16:25 the next day. After transfer, 10 h rest and getting ready, you have <b>12.5 h free</b>, from 02:25 to 14:55. Your body clock is 3 h ahead, so a late breakfast is the sweet spot.</p>
+          <p class="bot">You land at 15:25 local and pickup is 16:25 the next day. After transfer, 10 h rest and getting ready, you have <b>12.5 h free</b>, from 02:25 to 14:55. Your <span class="bc">body clock</span> is 3 h ahead, so a late breakfast is the sweet spot.</p>
           <p class="me">Add £18 for dinner with the crew</p>
           <p class="tool">Layover Logbook · add expense</p>
           <p class="bot">Saved: 18 GBP on food in London, about 84 QAR. You've kept 474 QAR of your allowance so far.</p>
@@ -682,7 +687,7 @@ footer p{max-width:70ch}
         <div class="price">$0</div>
         <p class="note">Everything you need on a layover. No card needed.</p>
         <ul>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Free-time planner, body clock and fatigue check</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg><span>Free-time planner, <span class="bc">body clock</span> and fatigue check</span></li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Nearby places, weather and city essentials</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Spending in any currency</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5 9-10"/></svg>Notes, wishlist and journal, synced to your account</li>
@@ -945,21 +950,21 @@ renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
 var scene=new T.Scene(), camera=new T.PerspectiveCamera(32,1,.1,100); camera.position.set(0,0,4.6);
 var world=new T.Group(); scene.add(world); var R=1;
 function ll(lat,lon,r){ var p=(90-lat)*Math.PI/180, t=(lon+180)*Math.PI/180; return new T.Vector3(-r*Math.sin(p)*Math.cos(t), r*Math.cos(p), r*Math.sin(p)*Math.sin(t)); }
-world.add(new T.Mesh(new T.SphereGeometry(R,64,48),new T.ShaderMaterial({
-  uniforms:{a:{value:new T.Color("#F6FAFC")},b:{value:new T.Color("#C4D3DD")},rim:{value:new T.Color("#B0136E")}},
-  vertexShader:"varying vec3 vN; void main(){ vN=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-  fragmentShader:"uniform vec3 a; uniform vec3 b; uniform vec3 rim; varying vec3 vN; void main(){ float f=clamp(dot(vN,normalize(vec3(-.35,.45,1.))),0.,1.); vec3 c=mix(b,a,pow(f,.8)); float r=pow(1.-max(vN.z,0.),3.); c=mix(c,rim,r*.2); gl_FragColor=vec4(c,1.); }"})));
+/* realistic Earth: NASA Blue Marble (public domain), sun shading, ocean shine, blue atmosphere */
+var earthU={map:{value:null},water:{value:null},ready:{value:0}};
+world.add(new T.Mesh(new T.SphereGeometry(R,96,64),new T.ShaderMaterial({uniforms:earthU,
+  vertexShader:"varying vec3 vN; varying vec2 vUv; void main(){ vUv=uv; vN=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
+  fragmentShader:"uniform sampler2D map; uniform sampler2D water; uniform float ready; varying vec3 vN; varying vec2 vUv; void main(){ vec3 base=mix(vec3(.04,.11,.24),texture2D(map,vUv).rgb,ready); vec3 L=normalize(vec3(-.35,.45,1.)); float d=max(dot(vN,L),0.); vec3 c=base*(.28+.95*d); float w=ready*texture2D(water,vUv).r; vec3 H=normalize(L+vec3(0.,0.,1.)); c+=vec3(.85,.92,1.)*pow(max(dot(vN,H),0.),38.)*w*.5; float r=pow(1.-max(vN.z,0.),3.); c=mix(c,vec3(.42,.66,1.),r*.5); gl_FragColor=vec4(c,1.); }"})));
+(function(){ var tl=new T.TextureLoader(), n=0, done=function(){ if(++n===2) earthU.ready.value=1; };
+  tl.load("earth.jpg",function(t){ t.anisotropy=renderer.capabilities.getMaxAnisotropy(); earthU.map.value=t; done(); });
+  tl.load("earth-water.png",function(t){ earthU.water.value=t; done(); }); })();
 world.add(new T.Mesh(new T.SphereGeometry(R*1.14,48,32),new T.ShaderMaterial({side:T.BackSide,transparent:true,depthWrite:false,
   vertexShader:"varying vec3 vN; void main(){ vN=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-  fragmentShader:"varying vec3 vN; void main(){ float i=pow(clamp(-vN.z*1.6,0.,1.),2.); gl_FragColor=vec4(.69,.07,.43,i*.28); }"})));
-var gp=[];
-for(var la=-75;la<=75;la+=15) for(var lo=-180;lo<180;lo+=3) gp.push(ll(la,lo,R*1.001),ll(la,lo+3,R*1.001));
-for(var lo2=-180;lo2<180;lo2+=15) for(var la2=-87;la2<87;la2+=3) gp.push(ll(la2,lo2,R*1.001),ll(la2+3,lo2,R*1.001));
-world.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(gp),new T.LineBasicMaterial({color:0x13233F,transparent:true,opacity:.09})));
+  fragmentShader:"varying vec3 vN; void main(){ float i=pow(clamp(-vN.z*1.6,0.,1.),2.); gl_FragColor=vec4(.35,.6,1.,i*.55); }"})));
 function dot(fill,ring){ var c=document.createElement("canvas"); c.width=c.height=64; var g=c.getContext("2d"); g.beginPath(); g.arc(32,32,ring?25:28,0,Math.PI*2); g.fillStyle=fill; g.fill(); if(ring){ g.lineWidth=8; g.strokeStyle="#F6FAFC"; g.stroke(); } return new T.CanvasTexture(c); }
 var pos=[]; Object.keys(A).forEach(function(k){ var v=ll(A[k][0],A[k][1],R*1.004); pos.push(v.x,v.y,v.z); });
 var pg=new T.BufferGeometry(); pg.setAttribute("position",new T.Float32BufferAttribute(pos,3));
-world.add(new T.Points(pg,new T.PointsMaterial({size:.034,map:dot("#13233F"),transparent:true,alphaTest:.4,depthWrite:false})));
+world.add(new T.Points(pg,new T.PointsMaterial({size:.03,map:dot("#F3F7F9"),transparent:true,alphaTest:.4,depthWrite:false,opacity:.85})));
 var routeG=new T.Group(); world.add(routeG);
 var arcMat=new T.LineBasicMaterial({color:0xB0136E,transparent:true,opacity:.8}), planeTex=dot("#F0B429",true), hubTex=dot("#B0136E",true), arcs=[], clock=new T.Clock(), t0=0;
 routes=function(){

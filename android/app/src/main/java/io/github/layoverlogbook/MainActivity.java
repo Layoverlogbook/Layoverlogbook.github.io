@@ -39,7 +39,7 @@ public class MainActivity extends Activity {
             "https://layoverlogbook.github.io/app.html",
             "https://karawene112.github.io/layover/app.html"
     };
-    private static final String[] OUR_HOSTS = {"layoverlogbook.github.io", "karawene112.github.io"};
+    private static final String[] OUR_HOSTS = {"layoverlogbook.com", "www.layoverlogbook.com", "layoverlogbook.github.io", "karawene112.github.io"};
     /* Payment and sign-in pages that must stay inside the app */
     private static final String[] INSIDE_HOSTS = {"paddle.com", "paddle.io", "supabase.co"};
 
