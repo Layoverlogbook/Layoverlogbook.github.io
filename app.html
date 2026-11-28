@@ -583,6 +583,37 @@ a.btn{text-decoration:none}
 .pbody{padding:12px 16px 12px;display:grid;gap:8px}
 .pbody p{margin:0;white-space:pre-line;overflow-wrap:anywhere}
 .pplace{display:flex;justify-content:space-between;gap:4px 12px;align-items:baseline;flex-wrap:wrap}
+.pname{background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pname:hover b{text-decoration:underline}
+button.pavbtn{background:none;border:0;padding:0;border-radius:50%;cursor:pointer}
+.pdeal{margin:0 12px 10px;padding:10px 12px;border-radius:14px;background:#FFF1E6;border:1px solid #F6C9A4;color:#4A1D05;display:grid;gap:2px}
+.pdeal .dtag{font-size:.6875rem;font-weight:800;letter-spacing:.08em;color:#BF3F0A}
+.pdeal b{font-size:1.05rem;color:#4A1D05}
+.pdeal .hint{font-size:.8125rem;color:#7A3A12}
+.pdeal.old{background:var(--sub);border-color:var(--line);color:var(--muted)}.pdeal.old b,.pdeal.old .hint,.pdeal.old .dtag{color:var(--muted)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pdeal:not(.old){background:#3A1D0C;border-color:#6B3412;color:#FFE3CF}:root:not([data-theme="light"]) .pdeal:not(.old) b{color:#FFE3CF}:root:not([data-theme="light"]) .pdeal:not(.old) .hint{color:#F5BF98}:root:not([data-theme="light"]) .pdeal:not(.old) .dtag{color:#F28C38}}
+:root[data-theme="dark"] .pdeal:not(.old){background:#3A1D0C;border-color:#6B3412}:root[data-theme="dark"] .pdeal:not(.old) b{color:#FFE3CF}:root[data-theme="dark"] .pdeal:not(.old) .hint{color:#F5BF98}:root[data-theme="dark"] .pdeal:not(.old) .dtag{color:#F28C38}
+.dealbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.dealfields{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+.dealfields label{display:grid;gap:4px;font-size:.8125rem;color:var(--muted)}
+.profview{position:fixed;inset:0;z-index:46;background:var(--bg);overflow:auto;overscroll-behavior:contain;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+.profbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px;background:var(--bg);border-bottom:1px solid var(--line)}
+.profbar b{font-size:1.05rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.profbar .iconbtn{border:0;background:transparent;font-size:1.9rem;line-height:1;width:44px;height:44px;border-radius:50%;color:var(--ink)}
+.profbody{width:min(560px,100%);margin:0 auto;padding:16px;display:grid;gap:14px}
+.profhead{display:flex;align-items:center;gap:18px}
+.profhead .pav{width:84px;height:84px;font-size:2.1rem}
+.pstats{display:flex;flex:1;justify-content:space-around;gap:4px}
+.pstats button{background:none;border:0;display:grid;justify-items:center;gap:2px;color:var(--ink);padding:6px;border-radius:10px;min-width:64px}
+.pstats button b{font-size:1.25rem}
+.pstats button span{font-size:.8125rem;color:var(--muted)}
+.pstats button[aria-pressed="true"]{background:var(--sub)}
+.pstats button b,.pstats button span{pointer-events:none}
+.profbody h2{margin:0}
+.proflist{display:grid;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px}
+.proflist .prow{display:flex;align-items:center;gap:10px;padding:6px 8px}
+.proflist .prow .pname{flex:1;font-weight:600}
+.proflist .btn{padding:6px 14px;font-size:.875rem}
 .pstars{color:var(--star);letter-spacing:1px;white-space:nowrap}
 .pstars i{font-style:normal;color:var(--line)}
 .pact{display:flex;align-items:center;gap:4px;margin:0 -8px -4px}
@@ -1377,6 +1408,24 @@ body.touring .chat-root{display:none}
   <p class="hint" id="proLinks" style="font-size:.8125rem">Secure payment by Paddle. Core features stay free. <a href="./" target="_blank" rel="noopener">Website</a> · <a href="pricing.html" target="_blank" rel="noopener">Pricing</a> · <a href="terms.html" target="_blank" rel="noopener">Terms and refunds</a> · <a href="privacy-policy.html" target="_blank" rel="noopener">Privacy</a></p>
 </div>
 
+<div class="profview" id="profView" hidden role="dialog" aria-modal="true" aria-labelledby="profName">
+  <div class="profbar"><button class="iconbtn" type="button" id="profBack" aria-label="Back">‹</button><b id="profBarName"></b></div>
+  <div class="profbody">
+    <div class="profhead"><span id="profAv"></span>
+      <div class="pstats" id="profStats">
+        <button type="button" data-plist="posts" aria-pressed="true"><b id="profPosts">0</b><span>posts</span></button>
+        <button type="button" data-plist="followers" aria-pressed="false"><b id="profFollowers">0</b><span>followers</span></button>
+        <button type="button" data-plist="following" aria-pressed="false"><b id="profFollowing">0</b><span>following</span></button>
+      </div>
+    </div>
+    <div><h2 id="profName"></h2><p class="hint" id="profSub"></p></div>
+    <button class="btn" type="button" id="profFollow" hidden>Follow</button>
+    <div class="proflist" id="profList" hidden></div>
+    <div class="feed" id="profFeed"></div>
+    <button class="btn ghost" type="button" id="profMore" hidden>Show older posts</button>
+  </div>
+</div>
+
 <div class="backdrop" id="homeBackdrop" hidden></div>
 <form class="sheet" id="homeForm" hidden aria-label="Home base">
   <h2>Where are you based?</h2>
@@ -1567,6 +1616,8 @@ body.touring .chat-root{display:none}
     <div class="seg" id="crewScope" role="tablist" aria-label="Which posts" hidden>
       <button type="button" data-scope="here" aria-selected="true"><span class="dn">London</span></button>
       <button type="button" data-scope="all" aria-selected="false">Everywhere</button>
+      <button type="button" data-scope="following" aria-selected="false">Following</button>
+      <button type="button" data-scope="deals" aria-selected="false">Deals</button>
     </div>
   </div>
   <div class="card guesthero" id="crewGuest" hidden>
@@ -1599,11 +1650,15 @@ body.touring .chat-root{display:none}
     <div class="photoprev" id="crewPrev" hidden><img id="crewPrevImg" alt="Your photo or video"><span class="vbadge" id="crewPrevBadge" hidden></span><button type="button" class="x" id="crewPhotoX" aria-label="Remove photo">×</button></div>
     <div class="row">
       <input id="crewPlace" maxlength="60" placeholder="Place name, optional" aria-label="Place name">
-      <select id="crewCat" aria-label="Category"><option>Food</option><option>Sights</option><option>Shopping</option><option>Transport</option><option>Safety</option><option>Other</option></select>
+      <select id="crewCat" aria-label="Category"><option>Food</option><option>Sights</option><option>Shopping</option><option>Transport</option><option>Safety</option><option>Other</option><option value="Deal">Deal for crew</option></select>
     </div>
     <div class="row compactions">
       <div class="stars" id="crewStars" role="radiogroup" aria-label="Your rating, optional"><button type="button" role="radio" aria-checked="false" data-s="1" aria-label="1 star">★</button><button type="button" role="radio" aria-checked="false" data-s="2" aria-label="2 stars">★</button><button type="button" role="radio" aria-checked="false" data-s="3" aria-label="3 stars">★</button><button type="button" role="radio" aria-checked="false" data-s="4" aria-label="4 stars">★</button><button type="button" role="radio" aria-checked="false" data-s="5" aria-label="5 stars">★</button></div>
       <span class="row"><label class="btn ghost" for="crewFile" id="crewFileBtn">Add photo or video</label><button class="btn" type="submit" id="crewPost">Post</button></span>
+    </div>
+    <div class="dealfields" id="crewDealFields" hidden>
+      <label>The deal<input id="crewDeal" maxlength="80" placeholder="e.g. 20% off with crew ID" aria-label="The deal"></label>
+      <label>Last day (optional)<input type="date" id="crewUntil" aria-label="Last day of the deal"></label>
     </div>
     <input type="file" id="crewFile" accept="image/*,video/mp4,video/quicktime" hidden>
     <p class="hint" id="crewMsg" aria-live="polite"></p>
@@ -3887,14 +3942,20 @@ on("proSheet","click",async e=>{
 });
 
 /* ---------- crew feed (Crew tab): posts, photos, likes, comments ---------- */
-const Crew={scope:"here",key:null,posts:null,full:true,total:0,me:null,member:null,photo:null,photoUrl:"",video:null,rating:0,busy:false};
+const Crew={dealsAll:false,scope:"here",key:null,posts:null,full:true,total:0,me:null,member:null,photo:null,photoUrl:"",video:null,rating:0,busy:false};
 const VIDEO_MAX=25*1024*1024, VIDEO_SECS=60;
 const isVideo=p=>/\.(mp4|mov)$/i.test(p||"");
 const posterOf=p=>String(p).replace(/\.(mp4|mov)$/i,".jpg");
 const HEART='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.200A4.3 4.3 0 0 1 12 7.600a4.3 4.3 0 0 1 7.5 2.700c0 5.600-7.5 10.200-7.5 10.200z"/></svg>';
 const BUBBLE='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H11l-4.5 3.5v-3.5a2 2 0 0 1-2-2z"/></svg>';
 function crewVisible(){ const s=$("tab-crew"); return !!s&&!s.hidden; }
-const crewKey=()=>Crew.scope==="all"?"*":destKey();
+const crewKey=()=>Crew.scope==="all"?"*":Crew.scope==="following"?"@following":Crew.scope==="deals"?"$deals:"+(Crew.dealsAll?"*":destKey()):destKey();
+/* Which posts to load for the chosen tab: this city, everywhere, people I follow, or deals */
+function crewFetch(before){
+  if(Crew.scope==="following") return rpc("crew_feed_view",{p_mode:"following",p_dest:null,p_before:before});
+  if(Crew.scope==="deals") return rpc("crew_feed_view",{p_mode:"deals",p_dest:Crew.dealsAll?null:destKey(),p_before:before});
+  return rpc("crew_feed",{p_dest:Crew.scope==="all"?null:destKey(),p_before:before});
+}
 function ago(iso){ const s=Math.max(0,(Date.now()-Date.parse(iso))/1000); return s<60?"just now":s<3600?Math.floor(s/60)+" min ago":s<86400?Math.floor(s/3600)+" h ago":s<604800?Math.floor(s/86400)+" d ago":fmtDay(iso); }
 function hue(n){ let h=0; for(const c of String(n)) h=(h*31+c.charCodeAt(0))%360; return h; }
 const pav=n=>`<span class="pav" style="--h:${hue(n)}" aria-hidden="true">${esc(String(n||"?")[0].toUpperCase())}</span>`;
@@ -3976,9 +4037,16 @@ async function playVideo(box){
     box.replaceChildren(v);
   }catch(err){ box.classList.remove("playing"); throw err; }
 }
+function dealHTML(x){
+  if(x.c!=="Deal"||!x.deal) return "";
+  const old=x.until&&x.until<todayISO();
+  const when=x.until?new Date(x.until+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short"}):"";
+  return `<div class="pdeal${old?" old":""}"><span class="dtag">CREW DEAL</span><b>${esc(x.deal)}</b><span class="hint">${old?"Ended "+when:x.until?"Until "+when:"No end date given"} · check it's still on before you go</span></div>`;
+}
 function postHTML(x){
   return `<article class="post" data-id="${+x.id}">
-  <header>${pav(x.name)}<div><b>${esc(x.name)}</b><span class="hint">${esc(x.dest_name)}, ${ago(x.at)}</span></div>${x.mine?'<button class="plink" type="button" data-del>Delete</button>':'<button class="plink" type="button" data-rep>Report</button>'}</header>
+  <header><button type="button" class="pavbtn" data-prof="${esc(x.name)}" aria-label="${esc(x.name)}'s profile">${pav(x.name)}</button><div><button type="button" class="pname" data-prof="${esc(x.name)}"><b>${esc(x.name)}</b></button><span class="hint">${esc(x.dest_name)}, ${ago(x.at)}</span></div>${x.mine?'<button class="plink" type="button" data-del>Delete</button>':'<button class="plink" type="button" data-rep>Report</button>'}</header>
+  ${dealHTML(x)}
   ${!x.photo?"":isVideo(x.photo)?`<div class="pphoto pvideo" data-video="${esc(x.photo)}"><img alt="Video shared by ${esc(x.name)}" data-photo="${esc(posterOf(x.photo))}"><button class="playbtn" type="button" aria-label="Play video">▶</button></div>`
     :`<div class="pphoto"><img alt="Photo shared by ${esc(x.name)}" data-photo="${esc(x.photo)}"><span class="burst" aria-hidden="true">♥</span></div>`}
   <div class="pbody">
@@ -3991,8 +4059,11 @@ function postHTML(x){
 function drawCrew(){
   const f=$("crewFeed");
   if(!Crew.posts){ f.innerHTML='<div class="post skel"></div><div class="post skel"></div>'; $("crewMore").hidden=true; $("crewLoad").hidden=true; return; }
-  f.innerHTML=Crew.posts.length?Crew.posts.map(postHTML).join("")
+  const bar=Crew.scope!=="deals"?"":`<div class="dealbar"><span class="hint">${Crew.dealsAll?"Deals in every city":"Deals in "+esc(state.dest.name)}</span><span class="row"><button class="btn ghost" type="button" data-dealsall>${Crew.dealsAll?"Only "+esc(state.dest.name):"Every city"}</button><button class="btn" type="button" data-sharedeal>Share a deal</button></span></div>`;
+  const empty=Crew.scope==="following"?`<div class="card"><h2>Follow crew you like</h2><p class="hint">Tap a name or photo on any post to see their profile and follow them. Their posts from every city show up here.</p></div>`
+    :Crew.scope==="deals"?`<div class="card"><h2>No crew deals ${Crew.dealsAll?"yet":"in "+esc(state.dest.name)+" yet"}</h2><p class="hint">Know a place that gives crew a discount? Share it, and help the next crew save.</p></div>`
     :`<div class="card"><h2>Nothing ${Crew.scope==="all"?"shared":"from "+esc(state.dest.name)} yet</h2><p class="hint">Be the first to share a tip.</p></div>`;
+  f.innerHTML=bar+(Crew.posts.length?Crew.posts.map(postHTML).join(""):empty);
   const more=Math.max(0,Crew.total-Crew.posts.length);
   $("crewMore").hidden=Crew.full||!more; if(!Crew.full&&more) $("crewMoreText").textContent=`${more} more ${more===1?"post":"posts"} with Pro`;
   $("crewLoad").hidden=!Crew.full||!more;
@@ -4019,7 +4090,7 @@ async function renderCrew(force){
   drawCrew();
   if(Crew.posts&&!force) return;
   try{
-    const d=await rpc("crew_feed",{p_dest:Crew.scope==="all"?null:destKey(),p_before:null});
+    const d=await crewFetch(null);
     if(Crew.key!==k) return;
     if(d.member===false){ Crew.member=false; Crew.posts=null; crewChrome(); return; }
     Crew.member=true; Crew.posts=d.posts||[]; Crew.full=!!d.full; Crew.total=d.total||0; Crew.me=d.me||null; crewChrome(); drawCrew();
@@ -4100,10 +4171,20 @@ on("crewFile","change",async e=>{
     $("crewPrev").hidden=false; $("crewFileBtn").textContent="Change";
   }catch(err){ $("crewFile").value=""; $("crewMsg").textContent=err.message; }
 });
+function dealMode(){ const on=$("crewCat").value==="Deal"; $("crewDealFields").hidden=!on; $("crewStars").hidden=on; $("crewUntil").min=todayISO(); return on; }
+on("crewCat","change",dealMode);
+function startDeal(){
+  if($("crewForm").hidden){ toast("Choose your crew name first, then share the deal."); return; }
+  $("crewCat").value="Deal"; dealMode(); $("crewForm").scrollIntoView({behavior:"smooth",block:"center"}); setTimeout(()=>$("crewDeal").focus(),300);
+}
 on("crewForm","submit",async e=>{
   e.preventDefault(); if(Crew.busy) return;
-  const t=$("crewText").value.trim();
-  if(t.length<3&&!Crew.photo&&!Crew.video) return fieldError("crewText","Write a few words or add a photo or video.");
+  const t=$("crewText").value.trim(), isDeal=dealMode(), deal=$("crewDeal").value.trim();
+  if(isDeal){
+    if(deal.length<3) return fieldError("crewDeal","Say what the deal is, e.g. 20% off with crew ID.");
+    if(!$("crewPlace").value.trim()) return fieldError("crewPlace","Add the place name, so crew can find it.");
+  }
+  else if(t.length<3&&!Crew.photo&&!Crew.video) return fieldError("crewText","Write a few words or add a photo or video.");
   if(t.length>500) return fieldError("crewText","Keep the post under 500 characters.");
   if((t.match(/(https?:\/\/|www\.)/gi)||[]).length>1) return fieldError("crewText","Posts can contain at most one link.");
   if($("crewPlace").value.trim().length>60) return fieldError("crewPlace","Keep the place name under 60 characters.");
@@ -4113,9 +4194,12 @@ on("crewForm","submit",async e=>{
   try{
     if(Crew.video){ path=base+"."+Crew.video.ext; await put(path,Crew.video.blob,Crew.video.type); if(Crew.photo) await put(base+".jpg",Crew.photo,"image/jpeg"); }
     else if(Crew.photo){ path=base+".jpg"; await put(path,Crew.photo,"image/jpeg"); }
-    await rpc("crew_post_add",{p_dest:destKey(),p_name:state.dest.name,p_cat:$("crewCat").value,p_body:t,p_place:$("crewPlace").value.trim()||null,p_rating:Crew.rating||null,p_photo:path});
-    saved=true; $("crewText").value=""; $("crewPlace").value=""; setStars(0); clearPhoto();
-    toast("Posted to the crew feed."); await renderCrew(true);
+    if(isDeal) await rpc("crew_deal_add",{p_dest:destKey(),p_name:state.dest.name,p_body:t||null,p_place:$("crewPlace").value.trim(),p_deal:deal,p_until:$("crewUntil").value||null,p_photo:path});
+    else await rpc("crew_post_add",{p_dest:destKey(),p_name:state.dest.name,p_cat:$("crewCat").value,p_body:t,p_place:$("crewPlace").value.trim()||null,p_rating:Crew.rating||null,p_photo:path});
+    saved=true; $("crewText").value=""; $("crewPlace").value=""; $("crewDeal").value=""; $("crewUntil").value=""; setStars(0); clearPhoto();
+    if(isDeal){ $("crewCat").value="Food"; dealMode(); toast("Deal shared. Thank you for helping crew save."); }
+    else toast("Posted to the crew feed.");
+    await renderCrew(true);
   }catch(err){ $("crewMsg").textContent=err.message; if(!saved) sent.forEach(p=>sbStore("DELETE","crew-photos/"+p).catch(()=>{})); }
   finally{ Crew.busy=false; b.disabled=false; b.textContent="Post"; }
 });
@@ -4128,7 +4212,7 @@ async function likePost(art,x){
   catch(err){ Object.assign(x,was); show(); throw err; }
 }
 function drawComments(box,list){
-  box.innerHTML=`${list.length?`<ul class="clist">${list.map(c=>`<li>${pav(c.name)}<div><b>${esc(c.name)}</b> <span class="hint">${ago(c.at)}</span><p>${esc(c.t)}</p></div>${c.mine?`<button class="x" type="button" data-cdel="${+c.id}" aria-label="Delete your comment">×</button>`:""}</li>`).join("")}</ul>`:""}
+  box.innerHTML=`${list.length?`<ul class="clist">${list.map(c=>`<li>${pav(c.name)}<div><button type="button" class="pname" data-prof="${esc(c.name)}" style="display:inline"><b>${esc(c.name)}</b></button> <span class="hint">${ago(c.at)}</span><p>${esc(c.t)}</p></div>${c.mine?`<button class="x" type="button" data-cdel="${+c.id}" aria-label="Delete your comment">×</button>`:""}</li>`).join("")}</ul>`:""}
     <form class="row cform"><input maxlength="300" placeholder="${list.length?"Add a comment":"Be the first to comment"}" aria-label="Add a comment"><button class="btn" type="submit">Send</button></form>`;
 }
 async function loadComments(art,x){
@@ -4138,8 +4222,16 @@ async function loadComments(art,x){
 let lastTap={id:0,at:0};
 on("crewFeed","click",async e=>{
   if(e.target.closest("#crewRetry")){ renderCrew(true); return; }
-  const art=e.target.closest(".post"); if(!art||!Crew.posts) return;
-  const id=+art.dataset.id, x=Crew.posts.find(p=>p.id===id); if(!x) return;
+  if(e.target.closest("[data-dealsall]")){ Crew.dealsAll=!Crew.dealsAll; renderCrew(); return; }
+  if(e.target.closest("[data-sharedeal]")){ startDeal(); return; }
+  await postClick(e,()=>Crew.posts,id=>{ Crew.posts=Crew.posts.filter(p=>p.id!==id); Crew.total=Math.max(0,Crew.total-1); drawCrew(); });
+});
+on("profFeed","click",e=>postClick(e,()=>Prof.posts,id=>{ Prof.posts=Prof.posts.filter(p=>p.id!==id); if(Prof.data) Prof.data.post_count=Math.max(0,Prof.data.post_count-1); drawProfile(); Crew.key=null; }));
+async function postClick(e,list,removed){
+  const pb=e.target.closest("[data-prof]");
+  if(pb){ if(!(Prof.name&&!$("profView").hidden&&Prof.name.toLowerCase()===pb.dataset.prof.toLowerCase())) openProfile(pb.dataset.prof); return; }
+  const art=e.target.closest(".post"), posts=list(); if(!art||!posts) return;
+  const id=+art.dataset.id, x=posts.find(p=>p.id===id); if(!x) return;
   try{
     if(e.target.closest("[data-like]")) await likePost(art,x);
     else if(e.target.closest(".pvideo")){ const box=e.target.closest(".pvideo"); if(!box.classList.contains("playing")) await playVideo(box); }
@@ -4156,24 +4248,94 @@ on("crewFeed","click",async e=>{
     else if(e.target.closest("[data-del]")){
       if(!confirm("Delete this post?")) return;
       const path=await rpc("crew_post_delete",{p_id:id}); if(path){ sbStore("DELETE","crew-photos/"+path).catch(()=>{}); if(isVideo(path)) sbStore("DELETE","crew-photos/"+posterOf(path)).catch(()=>{}); }
-      Crew.posts=Crew.posts.filter(p=>p.id!==id); Crew.total=Math.max(0,Crew.total-1); drawCrew();
+      removed(id);
     }
     else if(e.target.closest("[data-rep]")){
       if(!confirm("Report this post? Use this for crew hotels, uniforms or faces shown without consent, or abuse.")) return;
       await rpc("crew_report",{p_id:id}); toast("Reported. Thank you for keeping the feed safe.");
     }
   }catch(err){ toast(err.message); }
-});
-on("crewFeed","submit",async e=>{
+}
+async function commentSubmit(e,list){
   const f=e.target.closest(".cform"); if(!f) return; e.preventDefault();
-  const art=f.closest(".post"), x=art&&Crew.posts&&Crew.posts.find(p=>p.id===+art.dataset.id), inp=f.querySelector("input"), t=inp.value.trim();
+  const posts=list(), art=f.closest(".post"), x=art&&posts&&posts.find(p=>p.id===+art.dataset.id), inp=f.querySelector("input"), t=inp.value.trim();
   if(!x||!t) return; const b=f.querySelector("button"); b.disabled=true;
   try{ await rpc("crew_comment_add",{p_id:x.id,p_body:t}); await loadComments(art,x); }
   catch(err){ toast(err.message); b.disabled=false; }
-});
+}
+on("crewFeed","submit",e=>commentSubmit(e,()=>Crew.posts));
+on("profFeed","submit",e=>commentSubmit(e,()=>Prof.posts));
 on("crewLoad","click",async()=>{
   if(!Crew.posts||!Crew.posts.length) return; const k=Crew.key, b=$("crewLoad"); b.disabled=true;
-  try{ const d=await rpc("crew_feed",{p_dest:Crew.scope==="all"?null:destKey(),p_before:Crew.posts[Crew.posts.length-1].id}); if(Crew.key===k){ if(!d.posts.length) Crew.total=Crew.posts.length; Crew.posts=Crew.posts.concat(d.posts); drawCrew(); } }
+  try{ const d=await crewFetch(Crew.posts[Crew.posts.length-1].id); if(Crew.key===k){ if(!d.posts.length) Crew.total=Crew.posts.length; Crew.posts=Crew.posts.concat(d.posts); drawCrew(); } }
+  catch(err){ toast(err.message); }
+  finally{ b.disabled=false; }
+});
+/* ---------- crew profiles: posts, followers, following ---------- */
+const Prof={name:null,data:null,posts:[],list:"posts",busy:false};
+async function openProfile(name){
+  Prof.name=name; Prof.data=null; Prof.posts=[]; Prof.list="posts";
+  $("profView").hidden=false; document.body.style.overflow="hidden"; $("profView").scrollTop=0;
+  $("profBarName").textContent=name; $("profName").textContent=name; $("profAv").innerHTML=pav(name); $("profSub").textContent="";
+  ["profPosts","profFollowers","profFollowing"].forEach(i=>$(i).textContent="…"); $("profFollow").hidden=true; $("profList").hidden=true; $("profMore").hidden=true;
+  $("profStats").querySelectorAll("[data-plist]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.plist==="posts"));
+  $("profFeed").hidden=false; $("profFeed").innerHTML='<div class="post skel"></div>';
+  try{ const d=await rpc("crew_profile",{p_name:name}); if(Prof.name!==name) return; Prof.data=d; Prof.name=d.name; Prof.posts=d.posts||[]; drawProfile(); }
+  catch(err){ if(Prof.name===name) $("profFeed").innerHTML=`<div class="card"><p class="hint">${esc(err.message)}</p></div>`; }
+}
+function closeProfile(){ $("profView").hidden=true; document.body.style.overflow=""; Prof.name=null; }
+function followLabel(d){ return d.i_follow?"Following":d.follows_me?"Follow back":"Follow"; }
+function drawProfile(){
+  const d=Prof.data; if(!d) return;
+  $("profBarName").textContent=d.name; $("profName").textContent=d.name; $("profAv").innerHTML=pav(d.name);
+  $("profPosts").textContent=d.post_count; $("profFollowers").textContent=d.followers; $("profFollowing").textContent=d.following;
+  const since=d.since?new Date(d.since).toLocaleDateString(undefined,{month:"long",year:"numeric"}):"";
+  $("profSub").textContent=(d.is_me?"This is you. ":"")+(d.follows_me&&!d.is_me?"Follows you. ":"")+(since?"Crew member since "+since+".":"");
+  const fb=$("profFollow"); fb.hidden=!!d.is_me; fb.textContent=followLabel(d); fb.classList.toggle("ghost",!!d.i_follow);
+  $("profStats").querySelectorAll("[data-plist]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.plist===Prof.list));
+  const showPosts=Prof.list==="posts";
+  $("profFeed").hidden=!showPosts; $("profList").hidden=showPosts;
+  $("profFeed").innerHTML=Prof.posts.length?Prof.posts.map(postHTML).join(""):`<div class="card"><p class="hint">${d.is_me?"You haven't posted yet. Your posts and deals will show here.":"No posts yet."}</p></div>`;
+  $("profFeed").querySelectorAll("img[data-photo]").forEach(i=>photoIO?photoIO.observe(i):loadPhoto(i));
+  $("profMore").hidden=!showPosts||Prof.posts.length>=(d.total||0);
+}
+async function setFollow(name,on){
+  const r=await rpc("crew_follow",{p_name:name,p_on:on});
+  if(Crew.scope==="following") Crew.key=null;   /* the Following tab reloads next time */
+  return r;
+}
+on("profBack","click",closeProfile);
+addEventListener("keydown",e=>{ if(e.key==="Escape"&&!$("profView").hidden) closeProfile(); });
+on("profFollow","click",async()=>{
+  const d=Prof.data; if(!d||Prof.busy) return; Prof.busy=true;
+  const was={i_follow:d.i_follow,followers:d.followers};
+  d.i_follow=!d.i_follow; d.followers=Math.max(0,d.followers+(d.i_follow?1:-1)); drawProfile();
+  try{ const r=await setFollow(d.name,d.i_follow); d.followers=r.followers; drawProfile(); if(d.i_follow) toast("Following "+d.name+". Their posts show in your Following tab."); }
+  catch(err){ Object.assign(d,was); drawProfile(); toast(err.message); }
+  finally{ Prof.busy=false; }
+});
+on("profStats","click",async e=>{
+  const b=e.target.closest("[data-plist]"); if(!b||!Prof.data) return;
+  Prof.list=b.dataset.plist; drawProfile(); if(Prof.list==="posts") return;
+  const box=$("profList"), name=Prof.data.name, kind=Prof.list; box.innerHTML='<p class="hint" style="padding:8px">Loading…</p>';
+  try{
+    const list=await rpc("crew_follow_list",{p_name:name,p_kind:kind}); if(Prof.list!==kind||Prof.name!==name) return;
+    box.innerHTML=list.length?list.map(x=>`<div class="prow">${pav(x.name)}<button type="button" class="pname" data-prof="${esc(x.name)}">${esc(x.name)}</button>${x.is_me?'<span class="hint">You</span>':`<button type="button" class="btn${x.i_follow?" ghost":""}" data-fol="${esc(x.name)}" data-on="${x.i_follow?1:0}">${x.i_follow?"Following":"Follow"}</button>`}</div>`).join("")
+      :`<p class="hint" style="padding:8px">${kind==="followers"?"No followers yet.":"Not following anyone yet."}</p>`;
+  }catch(err){ box.innerHTML=`<p class="hint" style="padding:8px">${esc(err.message)}</p>`; }
+});
+on("profList","click",async e=>{
+  const p=e.target.closest("[data-prof]"); if(p){ openProfile(p.dataset.prof); return; }
+  const b=e.target.closest("[data-fol]"); if(!b) return;
+  const on=b.dataset.on!=="1"; b.disabled=true;
+  try{ await setFollow(b.dataset.fol,on); b.dataset.on=on?"1":"0"; b.textContent=on?"Following":"Follow"; b.classList.toggle("ghost",on);
+    if(Prof.data&&Prof.data.is_me&&Prof.list==="following"){ Prof.data.following=Math.max(0,Prof.data.following+(on?1:-1)); $("profFollowing").textContent=Prof.data.following; } }
+  catch(err){ toast(err.message); }
+  finally{ b.disabled=false; }
+});
+on("profMore","click",async()=>{
+  if(!Prof.data||!Prof.posts.length) return; const name=Prof.name, b=$("profMore"); b.disabled=true;
+  try{ const d=await rpc("crew_profile",{p_name:name,p_before:Prof.posts[Prof.posts.length-1].id}); if(Prof.name===name){ Prof.posts=Prof.posts.concat(d.posts||[]); if(!(d.posts||[]).length) Prof.data.total=Prof.posts.length; drawProfile(); } }
   catch(err){ toast(err.message); }
   finally{ b.disabled=false; }
 });
