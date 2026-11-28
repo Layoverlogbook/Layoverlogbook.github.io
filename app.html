@@ -635,6 +635,15 @@ a.btn{text-decoration:none}
 .viewtoggle button{flex:1;background:none;border:0;padding:10px;color:var(--muted);border-bottom:2px solid transparent}
 .viewtoggle button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink)}
 .viewtoggle svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8}
+.pav{position:relative;overflow:hidden}
+.pav img,.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s;border-radius:50%}
+.pav img.in,.avatar img.in{opacity:1}
+.avatar{position:relative;overflow:hidden}
+.story .me{position:relative;display:block;border-radius:50%}
+.avedit{position:relative;border:0;background:none;padding:0;border-radius:50%;cursor:pointer}
+.avedit i{position:absolute;right:0;bottom:2px;width:28px;height:28px;border-radius:50%;background:#E2589F;color:#fff;display:grid;place-items:center;border:3px solid var(--bg);font-style:normal}
+.avedit i svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2}
+.profphoto{display:flex;gap:8px;flex-wrap:wrap}
 .pname{background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pname:hover b{text-decoration:underline}
 button.pavbtn{background:none;border:0;padding:0;border-radius:50%;cursor:pointer}
@@ -1471,6 +1480,7 @@ body.touring .chat-root{display:none}
       </div>
     </div>
     <div><h2 id="profName"></h2><p class="hint" id="profSub"></p></div>
+    <div class="profphoto" id="profPhoto" hidden><button class="btn ghost" type="button" data-avpick>Change profile picture</button><button class="btn ghost" type="button" id="profAvRemove" hidden>Remove picture</button><input type="file" id="avFile" accept="image/*" hidden></div>
     <button class="btn" type="button" id="profFollow" hidden>Follow</button>
     <div class="proflist" id="profList" hidden></div>
     <div class="viewtoggle" id="profView2" role="group" aria-label="Show posts as">
@@ -1705,7 +1715,7 @@ body.touring .chat-root{display:none}
   <div class="stories" id="crewStories" hidden aria-label="Crew"></div>
   <button type="button" class="cpill" id="crewOpen" hidden><span id="crewOpenAv"></span><span class="t" id="crewOpenText">Share something from your layover</span><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="3.6"/><path d="M8 6l1.6-2.4h4.8L16 6"/></svg></button>
   <form class="card composer" id="crewForm" hidden>
-    <div class="cardhead"><span class="hint" id="crewAs"></span><button class="linkbtn" type="button" id="crewRename">Change name</button></div>
+    <div class="cardhead"><span class="hint" id="crewAs"></span><span><button class="linkbtn" type="button" id="crewMyProfile">Your profile</button> · <button class="linkbtn" type="button" id="crewRename">Change name</button></span></div>
     <textarea id="crewText" rows="2" maxlength="500" aria-label="New post"></textarea>
     <div class="photoprev" id="crewPrev" hidden><img id="crewPrevImg" alt="Your photo or video"><span class="vbadge" id="crewPrevBadge" hidden></span><button type="button" class="x" id="crewPhotoX" aria-label="Remove photo">×</button></div>
     <div class="row">
@@ -3783,7 +3793,7 @@ function renderAccount(){
   $("dataCard").hidden=!LIVE;
   $("acctBtn").hidden=!signed;
   $("joinBtn").hidden=signed||!WEBAPP||!CLOUD_ON;
-  if(signed) $("acctBtn").textContent=(DB.cloud.email||"?").trim()[0].toUpperCase();
+  if(signed){ $("acctBtn").textContent=(DB.cloud.email||"?").trim()[0].toUpperCase(); try{ if(Crew.meAv) setTimeout(headerAv,0); }catch(e){} }
   renderAI();
   if(signed) checkStatsAccess(); else { statsChecked=false; if($("siteStats")) $("siteStats").hidden=true; }
   $("acctSignin").hidden=signed||!WEBAPP||!CLOUD_ON; $("acctSignin").textContent="Sign up or sign in"; $("acctOut").hidden=!signed; $("acctDel").hidden=!signed;
@@ -4002,7 +4012,7 @@ on("proSheet","click",async e=>{
 });
 
 /* ---------- crew feed (Crew tab): posts, photos, likes, comments ---------- */
-const Crew={dealsAll:false,scope:"here",key:null,posts:null,full:true,total:0,me:null,member:null,photo:null,photoUrl:"",video:null,rating:0,busy:false};
+const Crew={meAv:lsGet("lay.meAv",null),dealsAll:false,scope:"here",key:null,posts:null,full:true,total:0,me:null,member:null,photo:null,photoUrl:"",video:null,rating:0,busy:false};
 const VIDEO_MAX=25*1024*1024, VIDEO_SECS=60;
 const isVideo=p=>/\.(mp4|mov)$/i.test(p||"");
 const posterOf=p=>String(p).replace(/\.(mp4|mov)$/i,".jpg");
@@ -4018,7 +4028,9 @@ function crewFetch(before){
 }
 function ago(iso){ const s=Math.max(0,(Date.now()-Date.parse(iso))/1000); return s<60?"just now":s<3600?Math.floor(s/60)+" min ago":s<86400?Math.floor(s/3600)+" h ago":s<604800?Math.floor(s/86400)+" d ago":fmtDay(iso); }
 function hue(n){ let h=0; for(const c of String(n)) h=(h*31+c.charCodeAt(0))%360; return h; }
-const pav=n=>`<span class="pav" style="--h:${hue(n)}" aria-hidden="true">${esc(String(n||"?")[0].toUpperCase())}</span>`;
+const pav=(n,av)=>`<span class="pav" style="--h:${hue(n)}" aria-hidden="true">${esc(String(n||"?")[0].toUpperCase())}${av?`<img alt="" data-photo="${esc(av)}">`:""}</span>`;
+/* Start loading every picture inside a box (posts, avatars), nearest first */
+function loadImgs(box){ if(box) box.querySelectorAll("img[data-photo]").forEach(i=>photoIO?photoIO.observe(i):loadPhoto(i)); }
 /* Photos are private to signed-in crew, so they are fetched with the user's token */
 async function sbStore(method,path,opt={}){
   let tok; try{ tok=await validToken(); }catch(e){ throw new Error("Sign in again to continue."); }
@@ -4033,7 +4045,7 @@ async function loadPhoto(img){
     let u=photoCache.get(p);
     if(!u){ const r=await sbStore("GET","authenticated/crew-photos/"+p); if(!r.ok) throw new Error("gone"); u=URL.createObjectURL(await r.blob()); photoCache.set(p,u); }
     img.onload=()=>img.classList.add("in"); img.src=u;
-  }catch(e){ const box=img.closest(".pphoto"); if(box&&!box.dataset.video) box.classList.add("gone"); }
+  }catch(e){ if(img.closest(".pav,.avatar")){ img.remove(); return; } const box=img.closest(".pphoto"); if(box&&!box.dataset.video) box.classList.add("gone"); }
 }
 const photoIO="IntersectionObserver" in window?new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ photoIO.unobserve(e.target); loadPhoto(e.target); } }),{rootMargin:"600px"}):null;
 /* Shrinks a photo before upload. Redrawing it also removes the location data cameras hide in photos. */
@@ -4112,7 +4124,7 @@ function postHTML(x){
     :`<div class="pphoto" data-full><img alt="Photo shared by ${esc(x.name)}" data-photo="${esc(x.photo)}"><span class="burst" aria-hidden="true">♥</span></div>`;
   const sub=x.place?`${PIN} ${esc(x.place)} · ${esc(x.dest_name)}`:esc(x.dest_name);
   return `<article class="post${x.photo?" hasmedia":""}" data-id="${+x.id}">
-  <header><button type="button" class="pavbtn ring" data-prof="${esc(x.name)}" aria-label="${esc(x.name)}'s profile">${pav(x.name)}</button><div><button type="button" class="pname" data-prof="${esc(x.name)}"><b>${esc(x.name)}</b></button><span class="psub">${sub}</span></div><button type="button" class="pmore" data-menu aria-label="More options" aria-expanded="false">···</button>
+  <header><button type="button" class="pavbtn ring" data-prof="${esc(x.name)}" aria-label="${esc(x.name)}'s profile">${pav(x.name,x.av)}</button><div><button type="button" class="pname" data-prof="${esc(x.name)}"><b>${esc(x.name)}</b></button><span class="psub">${sub}</span></div><button type="button" class="pmore" data-menu aria-label="More options" aria-expanded="false">···</button>
     <div class="pmenu" hidden>${x.mine?'<button type="button" data-del>Delete post</button>':'<button type="button" data-rep>Report post</button>'}<button type="button" data-menu>Cancel</button></div></header>
   ${dealHTML(x)}
   ${media}
@@ -4142,14 +4154,14 @@ function drawCrew(){
 /* Round avatars across the top: you, crew you follow (or crew active here), and deals */
 async function drawStories(){
   const box=$("crewStories"); if(!box||Crew.member!==true||!Crew.me){ if(box) box.hidden=true; return; }
-  if(Crew.follows===undefined){ Crew.follows=null; try{ Crew.follows=(await rpc("crew_follow_list",{p_name:Crew.me,p_kind:"following"})).map(f=>f.name); }catch(e){ Crew.follows=[]; } }
+  if(Crew.follows===undefined){ Crew.follows=null; try{ Crew.follows=await rpc("crew_follow_list",{p_name:Crew.me,p_kind:"following"}); }catch(e){ Crew.follows=[]; } }
   const seen=new Set([Crew.me.toLowerCase()]), names=[];
-  (Crew.follows||[]).forEach(n=>{ if(!seen.has(n.toLowerCase())){ seen.add(n.toLowerCase()); names.push([n,true]); } });
-  (Crew.posts||[]).forEach(p=>{ if(names.length<20&&p.name&&p.name!=="Crew member"&&!seen.has(p.name.toLowerCase())){ seen.add(p.name.toLowerCase()); names.push([p.name,false]); } });
-  box.innerHTML=`<button type="button" class="story" data-compose><span class="ring seen"><span class="me">${pav(Crew.me)}<i>+</i></span></span><span class="nm">Your post</span></button>`
+  (Crew.follows||[]).forEach(f=>{ if(!seen.has(f.name.toLowerCase())){ seen.add(f.name.toLowerCase()); names.push([f.name,true,f.av]); } });
+  (Crew.posts||[]).forEach(p=>{ if(names.length<20&&p.name&&p.name!=="Crew member"&&!seen.has(p.name.toLowerCase())){ seen.add(p.name.toLowerCase()); names.push([p.name,false,p.av]); } });
+  box.innerHTML=`<button type="button" class="story" data-compose><span class="ring seen"><span class="me">${pav(Crew.me,Crew.meAv)}<i>+</i></span></span><span class="nm">Your post</span></button>`
     +`<button type="button" class="story dealstory" data-deals><span class="ring"><span class="pav" style="--h:20">%</span></span><span class="nm">Crew deals</span></button>`
-    +names.map(([n,f])=>`<button type="button" class="story" data-prof="${esc(n)}"><span class="ring${f?"":" seen"}">${pav(n)}</span><span class="nm">${esc(n)}</span></button>`).join("");
-  box.hidden=false;
+    +names.map(([n,f,av])=>`<button type="button" class="story" data-prof="${esc(n)}"><span class="ring${f?"":" seen"}">${pav(n,av)}</span><span class="nm">${esc(n)}</span></button>`).join("");
+  box.hidden=false; loadImgs(box);
 }
 on("crewStories","click",e=>{
   const p=e.target.closest("[data-prof]"); if(p){ openProfile(p.dataset.prof); return; }
@@ -4158,13 +4170,14 @@ on("crewStories","click",e=>{
 });
 function openComposer(){ Crew.compose=true; crewChrome(); setTimeout(()=>{ $("crewForm").scrollIntoView({behavior:"smooth",block:"start"}); $("crewText").focus(); },60); }
 on("crewOpen","click",openComposer);
+on("crewMyProfile","click",()=>{ if(Crew.me) openProfile(Crew.me); });
 on("crewClose","click",()=>{ Crew.compose=false; $("crewCat").value="Food"; dealMode(); crewChrome(); });
 function crewChrome(){
   const locked=Crew.member===false, known=Crew.posts!==null&&!locked, named=!!Crew.me;
   $("crewJoinCard").hidden=!locked; $("crewScope").hidden=locked; $("crewInviteCard").hidden=Crew.member!==true;
   $("crewNameCard").hidden=!known||named; $("crewForm").hidden=!known||!named||!Crew.compose;
   $("crewOpen").hidden=!known||!named||!!Crew.compose;
-  if(named){ $("crewAs").textContent="Posting as "+Crew.me; $("crewOpenAv").innerHTML=pav(Crew.me); $("crewOpenText").textContent=`Share a tip, photo or deal from ${state.dest.name}`; }
+  if(named){ $("crewAs").textContent="Posting as "+Crew.me; $("crewOpenAv").innerHTML=pav(Crew.me,Crew.meAv); loadImgs($("crewOpenAv")); headerAv(); $("crewOpenText").textContent=`Share a tip, photo or deal from ${state.dest.name}`; }
   if(locked||!known) $("crewStories").hidden=true; else drawStories();
   if(locked){ $("crewFeed").innerHTML=""; $("crewMore").hidden=true; $("crewLoad").hidden=true; }
 }
@@ -4185,7 +4198,7 @@ async function renderCrew(force){
     const d=await crewFetch(null);
     if(Crew.key!==k) return;
     if(d.member===false){ Crew.member=false; Crew.posts=null; crewChrome(); return; }
-    Crew.member=true; Crew.posts=d.posts||[]; Crew.full=!!d.full; Crew.total=d.total||0; Crew.me=d.me||null; crewChrome(); drawCrew();
+    Crew.member=true; Crew.posts=d.posts||[]; Crew.full=!!d.full; Crew.total=d.total||0; Crew.me=d.me||null; Crew.meAv=d.me_av||null; lsSet("lay.meAv",Crew.meAv); crewChrome(); drawCrew();
   }catch(e){ if(Crew.key===k&&!Crew.posts) $("crewFeed").innerHTML=`<div class="card"><p class="hint">${esc(e.message)}</p><button class="btn ghost" type="button" id="crewRetry" style="justify-self:start">Try again</button></div>`; }
 }
 on("crewScope","click",e=>{
@@ -4305,12 +4318,13 @@ async function likePost(art,x){
   catch(err){ Object.assign(x,was); show(); throw err; }
 }
 function drawComments(box,list){
-  box.innerHTML=`${list.length?`<ul class="clist">${list.map(c=>`<li>${pav(c.name)}<div><button type="button" class="pname" data-prof="${esc(c.name)}" style="display:inline"><b>${esc(c.name)}</b></button> <span class="hint">${ago(c.at)}</span><p>${esc(c.t)}</p></div>${c.mine?`<button class="x" type="button" data-cdel="${+c.id}" aria-label="Delete your comment">×</button>`:""}</li>`).join("")}</ul>`:""}
+  box.dataset.loadav="1";
+  box.innerHTML=`${list.length?`<ul class="clist">${list.map(c=>`<li>${pav(c.name,c.av)}<div><button type="button" class="pname" data-prof="${esc(c.name)}" style="display:inline"><b>${esc(c.name)}</b></button> <span class="hint">${ago(c.at)}</span><p>${esc(c.t)}</p></div>${c.mine?`<button class="x" type="button" data-cdel="${+c.id}" aria-label="Delete your comment">×</button>`:""}</li>`).join("")}</ul>`:""}
     <form class="row cform"><input maxlength="300" placeholder="${list.length?"Add a comment":"Be the first to comment"}" aria-label="Add a comment"><button class="btn" type="submit">Send</button></form>`;
 }
 async function loadComments(art,x){
   const box=art.querySelector(".pcomments"); const list=await rpc("crew_comments_for",{p_id:x.id});
-  x.comments=list.length; const vc=art.querySelector(".pviewc"); if(vc) vc.textContent=x.comments?"Hide comments":"Add a comment"; drawComments(box,list);
+  x.comments=list.length; const vc=art.querySelector(".pviewc"); if(vc) vc.textContent=x.comments?"Hide comments":"Add a comment"; drawComments(box,list); loadImgs(box);
 }
 let lastTap={id:0,at:0}, lightT=0;
 function openLight(img,x){
@@ -4398,7 +4412,9 @@ function closeProfile(){ $("profView").hidden=true; document.body.style.overflow
 function followLabel(d){ return d.i_follow?"Following":d.follows_me?"Follow back":"Follow"; }
 function drawProfile(){
   const d=Prof.data; if(!d) return;
-  $("profBarName").textContent=d.name; $("profName").textContent=d.name; $("profAv").innerHTML=pav(d.name);
+  $("profBarName").textContent=d.name; $("profName").textContent=d.name;
+  $("profAv").innerHTML=d.is_me?`<button type="button" class="avedit" data-avpick aria-label="Change your profile picture">${pav(d.name,d.av)}<i><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></i></button>`:pav(d.name,d.av); loadImgs($("profAv"));
+  $("profPhoto").hidden=!d.is_me; $("profAvRemove").hidden=!d.av;
   $("profPosts").textContent=d.post_count; $("profFollowers").textContent=d.followers; $("profFollowing").textContent=d.following;
   const since=d.since?new Date(d.since).toLocaleDateString(undefined,{month:"long",year:"numeric"}):"";
   $("profSub").textContent=(d.is_me?"This is you. ":"")+(d.follows_me&&!d.is_me?"Follows you. ":"")+(since?"Crew member since "+since+".":"");
@@ -4414,7 +4430,7 @@ function drawProfile(){
   };
   $("profFeed").innerHTML=!Prof.posts.length?`<div class="card"><p class="hint">${d.is_me?"You haven't posted yet. Your posts and deals will show here.":"No posts yet."}</p></div>`
     :Prof.view==="grid"?`<div class="pgrid">${Prof.posts.map(tile).join("")}</div>`:Prof.posts.map(postHTML).join("");
-  $("profFeed").querySelectorAll("img[data-photo]").forEach(i=>photoIO?photoIO.observe(i):loadPhoto(i));
+  loadImgs($("profFeed"));
   $("profMore").hidden=!showPosts||Prof.posts.length>=(d.total||0);
 }
 async function setFollow(name,on){
@@ -4424,6 +4440,44 @@ async function setFollow(name,on){
   return r;
 }
 on("profBack","click",closeProfile);
+/* Your profile picture: cropped to a square on the phone (which also drops location data), then uploaded */
+async function squarePhoto(file,size){
+  let src, done=()=>{};
+  try{ src=await createImageBitmap(file,{imageOrientation:"from-image"}); done=()=>src.close&&src.close(); }
+  catch(e){ src=await new Promise((ok,no)=>{ const u=URL.createObjectURL(file), i=new Image(); i.onload=()=>{ URL.revokeObjectURL(u); ok(i); }; i.onerror=()=>{ URL.revokeObjectURL(u); no(new Error("That picture couldn't be opened. Try a JPEG or PNG.")); }; i.src=u; }); }
+  const w=src.width||src.naturalWidth, h=src.height||src.naturalHeight, m=Math.min(w,h), c=document.createElement("canvas");
+  c.width=c.height=Math.min(size,m);
+  c.getContext("2d").drawImage(src,(w-m)/2,(h-m)/2,m,m,0,0,c.width,c.height); done();
+  return await new Promise(ok=>c.toBlob(ok,"image/jpeg",.85));
+}
+function headerAv(){
+  const b=$("acctBtn"); if(!b||b.hidden) return;
+  const letter=(DB.cloud&&DB.cloud.email||"?").trim()[0].toUpperCase();
+  b.innerHTML=esc(letter)+(Crew.meAv?`<img alt="" data-photo="${esc(Crew.meAv)}">`:""); loadImgs(b);
+}
+async function setMyAvatar(path){
+  const r=await rpc("crew_set_avatar",{p_path:path});
+  if(r.old&&r.old!==path) sbStore("DELETE","crew-photos/"+r.old).catch(()=>{});
+  Crew.meAv=path; lsSet("lay.meAv",path);
+  const fix=p=>{ if(p&&Crew.me&&p.name===Crew.me) p.av=path; };
+  (Crew.posts||[]).forEach(fix); (Prof.posts||[]).forEach(fix); if(Prof.data&&Prof.data.is_me) Prof.data.av=path;
+  crewChrome(); drawCrew(); drawProfile(); headerAv();
+}
+on("profView","click",e=>{ if(e.target.closest("[data-avpick]")) $("avFile").click(); });
+on("avFile","change",async e=>{
+  const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f||!DB.cloud) return;
+  if(!/^image\//.test(f.type)) return toast("Choose a photo.");
+  toast("Updating your picture…");
+  const path=DB.cloud.uid+"/avatar-"+crypto.randomUUID()+".jpg";
+  try{
+    const blob=await squarePhoto(f,480);
+    const r=await sbStore("POST","crew-photos/"+path,{headers:{"Content-Type":"image/jpeg"},body:blob});
+    if(!r.ok) throw new Error("The upload didn't finish. Check your connection and try again.");
+    photoCache.set(path,URL.createObjectURL(blob));
+    await setMyAvatar(path); toast("Your new picture is on your profile, posts and comments.");
+  }catch(err){ sbStore("DELETE","crew-photos/"+path).catch(()=>{}); toast(err.message); }
+});
+on("profAvRemove","click",async()=>{ if(!confirm("Remove your profile picture?")) return; try{ await setMyAvatar(null); toast("Picture removed."); }catch(err){ toast(err.message); } });
 on("profView2","click",e=>{ const b=e.target.closest("[data-view]"); if(!b) return; Prof.view=b.dataset.view; drawProfile(); });
 on("profFeed","click",e=>{ const t=e.target.closest("[data-open]"); if(!t) return; e.stopImmediatePropagation(); Prof.view="list"; drawProfile();
   const a=$("profFeed").querySelector(`.post[data-id="${+t.dataset.open}"]`); if(a) a.scrollIntoView({block:"start"}); },true);
@@ -4442,8 +4496,9 @@ on("profStats","click",async e=>{
   const box=$("profList"), name=Prof.data.name, kind=Prof.list; box.innerHTML='<p class="hint" style="padding:8px">Loading…</p>';
   try{
     const list=await rpc("crew_follow_list",{p_name:name,p_kind:kind}); if(Prof.list!==kind||Prof.name!==name) return;
-    box.innerHTML=list.length?list.map(x=>`<div class="prow">${pav(x.name)}<button type="button" class="pname" data-prof="${esc(x.name)}">${esc(x.name)}</button>${x.is_me?'<span class="hint">You</span>':`<button type="button" class="btn${x.i_follow?" ghost":""}" data-fol="${esc(x.name)}" data-on="${x.i_follow?1:0}">${x.i_follow?"Following":"Follow"}</button>`}</div>`).join("")
+    box.innerHTML=list.length?list.map(x=>`<div class="prow">${pav(x.name,x.av)}<button type="button" class="pname" data-prof="${esc(x.name)}">${esc(x.name)}</button>${x.is_me?'<span class="hint">You</span>':`<button type="button" class="btn${x.i_follow?" ghost":""}" data-fol="${esc(x.name)}" data-on="${x.i_follow?1:0}">${x.i_follow?"Following":"Follow"}</button>`}</div>`).join("")
       :`<p class="hint" style="padding:8px">${kind==="followers"?"No followers yet.":"Not following anyone yet."}</p>`;
+    loadImgs(box);
   }catch(err){ box.innerHTML=`<p class="hint" style="padding:8px">${esc(err.message)}</p>`; }
 });
 on("profList","click",async e=>{
