@@ -596,6 +596,10 @@ a.btn{text-decoration:none}
 .story.dealstory .ring{background:linear-gradient(45deg,#F28C38,#FFC56B)}
 .story.dealstory .pav{background:#BF3F0A}
 .cpill{display:flex;align-items:center;gap:10px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 8px 6px 6px;color:var(--muted);font:inherit;text-align:left;box-shadow:var(--shadow);cursor:pointer}
+.avnudge{display:flex;align-items:center;gap:12px;margin-top:12px}
+.avnudge .pav{width:46px;height:46px;flex:none}
+.avnudge div{flex:1;display:flex;flex-direction:column;gap:2px}
+.avnudge .hint{font-size:.8125rem;margin:0}
 .cpill span.t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cpill svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round;margin-right:6px}
 .post header{position:relative}
@@ -1424,7 +1428,7 @@ body.touring .chat-root{display:none}
 
 <div class="appbar">
   <div class="wrap">
-    <div class="brand">Layover <b>Logbook</b> <span class="ver">v6.7</span></div>
+    <div class="brand">Layover <b>Logbook</b> <span class="ver">v6.8</span></div>
     <div class="barright">
     <button class="avatar" type="button" id="acctBtn" hidden aria-label="Your account"></button>
     <button class="joinbtn" type="button" id="joinBtn" hidden>Sign up</button>
@@ -1714,6 +1718,7 @@ body.touring .chat-root{display:none}
   </form>
   <div class="stories" id="crewStories" hidden aria-label="Crew"></div>
   <button type="button" class="cpill" id="crewOpen" hidden><span id="crewOpenAv"></span><span class="t" id="crewOpenText">Share something from your layover</span><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="3.6"/><path d="M8 6l1.6-2.4h4.8L16 6"/></svg></button>
+  <div class="card avnudge" id="crewAvNudge" hidden><span id="crewAvNudgeAv"></span><div><b>Add your profile picture</b><span class="hint">Crew will see it on your posts, comments and profile.</span></div><button class="btn" type="button" id="crewAvAdd">Add photo</button></div>
   <form class="card composer" id="crewForm" hidden>
     <div class="cardhead"><span class="hint" id="crewAs"></span><span><button class="linkbtn" type="button" id="crewMyProfile">Your profile</button> · <button class="linkbtn" type="button" id="crewRename">Change name</button></span></div>
     <textarea id="crewText" rows="2" maxlength="500" aria-label="New post"></textarea>
@@ -4170,6 +4175,7 @@ on("crewStories","click",e=>{
 });
 function openComposer(){ Crew.compose=true; crewChrome(); setTimeout(()=>{ $("crewForm").scrollIntoView({behavior:"smooth",block:"start"}); $("crewText").focus(); },60); }
 on("crewOpen","click",openComposer);
+on("crewAvAdd","click",()=>$("avFile").click());
 on("crewMyProfile","click",()=>{ if(Crew.me) openProfile(Crew.me); });
 on("crewClose","click",()=>{ Crew.compose=false; $("crewCat").value="Food"; dealMode(); crewChrome(); });
 function crewChrome(){
@@ -4177,6 +4183,8 @@ function crewChrome(){
   $("crewJoinCard").hidden=!locked; $("crewScope").hidden=locked; $("crewInviteCard").hidden=Crew.member!==true;
   $("crewNameCard").hidden=!known||named; $("crewForm").hidden=!known||!named||!Crew.compose;
   $("crewOpen").hidden=!known||!named||!!Crew.compose;
+  $("crewAvNudge").hidden=!known||!named||!!Crew.meAv;
+  if(named&&!Crew.meAv) $("crewAvNudgeAv").innerHTML=pav(Crew.me,null);
   if(named){ $("crewAs").textContent="Posting as "+Crew.me; $("crewOpenAv").innerHTML=pav(Crew.me,Crew.meAv); loadImgs($("crewOpenAv")); headerAv(); $("crewOpenText").textContent=`Share a tip, photo or deal from ${state.dest.name}`; }
   if(locked||!known) $("crewStories").hidden=true; else drawStories();
   if(locked){ $("crewFeed").innerHTML=""; $("crewMore").hidden=true; $("crewLoad").hidden=true; }
