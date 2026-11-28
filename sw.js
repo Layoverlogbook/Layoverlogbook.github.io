@@ -1,7 +1,7 @@
 /* Keeps the app working offline (flight mode, no wifi). Bump the version when you upload a new build.
    Works on any host: layoverlogbook.com (Cloudflare turns /app.html into /app with a redirect),
    the old github.io address, and the Android/Windows apps. */
-const CACHE = "layover-v7.1";
+const CACHE = "layover-v7.2";
 const SHELL = ["./app.html", "./config.js", "./globe3d.js", "./earth.jpg", "./earth-water.png", "./postcards.js", "./together.js", "./fx3d.js", "./chat.js",
   "./analytics.js", "./consent.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./apple-touch-icon.png",
   "./privacy-policy.html", "./politique-de-confidentialite.html", "./terms.html", "./conditions-generales.html",
